@@ -34,7 +34,7 @@ export class Ami {
 
     public readonly ami: any;
 
-    public readonly evtAmi = new SyncEvent<ManagerEvent>();
+    public readonly evt = new SyncEvent<ManagerEvent>();
 
     private isFullyBooted = false;
 
@@ -46,7 +46,7 @@ export class Ami {
 
         this.ami.keepConnected();
 
-        this.ami.on("managerevent", evt => this.evtAmi.post(evt));
+        this.ami.on("managerevent", evt => this.evt.post(evt));
         this.ami.on("fullybooted", () => { this.isFullyBooted = true; });
         this.ami.on("close", () => { this.isFullyBooted = false; });
 

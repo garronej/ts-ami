@@ -46,13 +46,13 @@ exports.generateUniqueActionId = (function () {
 var Ami = (function () {
     function Ami(credential) {
         var _this = this;
-        this.evtAmi = new ts_events_extended_1.SyncEvent();
+        this.evt = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
         this.lastAttributedActionId = "";
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
         this.ami = new AstMan(port, host, user, secret, true);
         this.ami.keepConnected();
-        this.ami.on("managerevent", function (evt) { return _this.evtAmi.post(evt); });
+        this.ami.on("managerevent", function (evt) { return _this.evt.post(evt); });
         this.ami.on("fullybooted", function () { _this.isFullyBooted = true; });
         this.ami.on("close", function () { _this.isFullyBooted = false; });
     }

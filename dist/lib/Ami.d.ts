@@ -13,7 +13,7 @@ export declare class Ami {
         user?: string;
     }): Ami;
     readonly ami: any;
-    readonly evtAmi: SyncEvent<ManagerEvent>;
+    readonly evt: SyncEvent<ManagerEvent>;
     private isFullyBooted;
     constructor(credential: Credential);
     lastAttributedActionId: string;
