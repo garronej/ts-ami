@@ -4,7 +4,6 @@ var ini_extended_1 = require("ini-extended");
 var fs_1 = require("fs");
 var path = require("path");
 var astConfPath = path.join("/etc", "asterisk");
-var defaultUser = "dongle-ext-user";
 ;
 function retrieveCredential(params) {
     params || (params = {});

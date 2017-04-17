@@ -17,14 +17,14 @@ export const generateUniqueActionId = (() => {
 
 })();
 
-export class AmiClient {
+export class Ami {
 
-    private static localClient: AmiClient | undefined = undefined;
+    private static localClient: Ami | undefined = undefined;
 
     public static localhost(params?: {
         astConfPath?: string;
         user?: string;
-    }): AmiClient {
+    }): Ami {
 
         if (this.localClient) return this.localClient;
 

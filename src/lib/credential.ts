@@ -4,7 +4,6 @@ import * as path from "path";
 
 const astConfPath = path.join("/etc", "asterisk");
 
-const defaultUser = "dongle-ext-user";
 
 export interface Credential {
     port: number;

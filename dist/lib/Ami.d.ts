@@ -6,12 +6,12 @@ export interface ManagerEvent {
     [header: string]: string;
 }
 export declare const generateUniqueActionId: () => string;
-export declare class AmiClient {
+export declare class Ami {
     private static localClient;
     static localhost(params?: {
         astConfPath?: string;
         user?: string;
-    }): AmiClient;
+    }): Ami;
     readonly ami: any;
     readonly evtAmi: SyncEvent<ManagerEvent>;
     private isFullyBooted;

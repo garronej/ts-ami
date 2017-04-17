@@ -43,8 +43,8 @@ exports.generateUniqueActionId = (function () {
     var counter = Date.now();
     return function () { return (counter++).toString(); };
 })();
-var AmiClient = (function () {
-    function AmiClient(credential) {
+var Ami = (function () {
+    function Ami(credential) {
         var _this = this;
         this.evtAmi = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
@@ -56,13 +56,13 @@ var AmiClient = (function () {
         this.ami.on("fullybooted", function () { _this.isFullyBooted = true; });
         this.ami.on("close", function () { _this.isFullyBooted = false; });
     }
-    AmiClient.localhost = function (params) {
+    Ami.localhost = function (params) {
         if (this.localClient)
             return this.localClient;
         return this.localClient = new this(credential_1.retrieveCredential(params));
     };
     ;
-    AmiClient.prototype.postAction = function (action) {
+    Ami.prototype.postAction = function (action) {
         var _this = this;
         if (!action.actionid)
             action.actionid = exports.generateUniqueActionId();
@@ -83,7 +83,7 @@ var AmiClient = (function () {
             });
         }); });
     };
-    AmiClient.prototype.addDialplanExtension = function (extension, priority, action, context, replace) {
+    Ami.prototype.addDialplanExtension = function (extension, priority, action, context, replace) {
         return __awaiter(this, void 0, void 0, function () {
             var rawCommand;
             return __generator(this, function (_a) {
@@ -104,7 +104,7 @@ var AmiClient = (function () {
             });
         });
     };
-    AmiClient.prototype.originateLocalChannel = function (context, extension) {
+    Ami.prototype.originateLocalChannel = function (context, extension) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -121,11 +121,11 @@ var AmiClient = (function () {
             });
         });
     };
-    AmiClient.prototype.disconnect = function () {
+    Ami.prototype.disconnect = function () {
         this.ami.disconnect();
     };
-    return AmiClient;
+    return Ami;
 }());
-AmiClient.localClient = undefined;
-exports.AmiClient = AmiClient;
+Ami.localClient = undefined;
+exports.Ami = Ami;
 //# sourceMappingURL=Ami.js.map
