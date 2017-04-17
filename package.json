@@ -1,0 +1,32 @@
+{
+  "name": "ts-ami",
+  "version": "0.1.0",
+  "description": "AMI client",
+  "main": "./dist/lib/index.js",
+  "types": "./dist/lib/index.d.ts",
+  "scripts": {
+    "tsc": "node ./node_modules/.bin/tsc -p ./tsconfig.json",
+    "test": "node ./dist/test/credential"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/garronej/ts-ami.git"
+  },
+  "keywords": [
+    "asterisk",
+    "ami"
+  ],
+  "author": "Joseph Garrone",
+  "license": "MIT",
+  "dependencies": {
+    "asterisk-manager": "garronej/NodeJS-AsteriskManager",
+    "ini-extended": "garronej/ini-extended",
+    "rejection-tracker": "garronej/rejection-tracker",
+    "ts-events-extended": "garronej/ts-events-extended",
+    "ts-promisify": "garronej/ts-promisify"
+  },
+  "devDependencies": {
+    "typescript": "^2.2.1",
+    "@types/node": "^4.2.2"
+  }
+}
