@@ -53,7 +53,7 @@ export class Ami {
     }
 
 
-    public lastAttributedActionId: string = "";
+    public lastActionId: string = "";
 
     public postAction(action: {
         action: string;
@@ -63,7 +63,7 @@ export class Ami {
         if (!action.actionid)
             action.actionid = generateUniqueActionId();
 
-        this.lastAttributedActionId = action.actionid;
+        this.lastActionId = action.actionid;
 
         return new Promise<void>(async (resolve, reject) => {
 

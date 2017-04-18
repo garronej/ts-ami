@@ -48,7 +48,7 @@ var Ami = (function () {
         var _this = this;
         this.evt = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
-        this.lastAttributedActionId = "";
+        this.lastActionId = "";
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
         this.ami = new AstMan(port, host, user, secret, true);
         this.ami.keepConnected();
@@ -66,7 +66,7 @@ var Ami = (function () {
         var _this = this;
         if (!action.actionid)
             action.actionid = exports.generateUniqueActionId();
-        this.lastAttributedActionId = action.actionid;
+        this.lastActionId = action.actionid;
         return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {

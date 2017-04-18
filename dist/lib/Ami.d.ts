@@ -16,7 +16,7 @@ export declare class Ami {
     readonly evt: SyncEvent<ManagerEvent>;
     private isFullyBooted;
     constructor(credential: Credential);
-    lastAttributedActionId: string;
+    lastActionId: string;
     postAction(action: {
         action: string;
         [key: string]: string;
