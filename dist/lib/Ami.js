@@ -104,6 +104,44 @@ var Ami = (function () {
             });
         });
     };
+    Ami.prototype.removeExtension = function (extension, context, priority) {
+        return __awaiter(this, void 0, void 0, function () {
+            var rawCommand;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        rawCommand = "dialplan remove extension " + extension + "@" + context;
+                        if (priority !== undefined)
+                            rawCommand += " " + priority;
+                        return [4 /*yield*/, this.postAction({
+                                "action": "Command",
+                                "Command": rawCommand
+                            })];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Ami.prototype.removeContext = function (context) {
+        return __awaiter(this, void 0, void 0, function () {
+            var rawCommand;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        rawCommand = "dialplan remove context " + context;
+                        return [4 /*yield*/, this.postAction({
+                                "action": "Command",
+                                "Command": rawCommand
+                            })];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
     Ami.prototype.originateLocalChannel = function (context, extension) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {

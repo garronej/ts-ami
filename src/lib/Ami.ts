@@ -99,6 +99,35 @@ export class Ami {
 
     }
 
+    public async removeExtension(
+        extension: string,
+        context: string,
+        priority?: number
+    ) {
+
+        let rawCommand = `dialplan remove extension ${extension}@${context}`;
+
+        if( priority !== undefined )
+            rawCommand+= ` ${priority}`;
+
+        await this.postAction({
+            "action": "Command",
+            "Command": rawCommand
+        });
+
+    }
+
+    public async removeContext( context: string) {
+
+        let rawCommand = `dialplan remove context ${context}`;
+
+        await this.postAction({
+            "action": "Command",
+            "Command": rawCommand
+        });
+
+    }
+
     public async originateLocalChannel(
         context: string,
         extension: string

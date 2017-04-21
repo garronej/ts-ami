@@ -22,6 +22,8 @@ export declare class Ami {
         [key: string]: string;
     }): Promise<any>;
     addDialplanExtension(extension: string, priority: number, action: string, context: string, replace?: boolean): Promise<void>;
+    removeExtension(extension: string, context: string, priority?: number): Promise<void>;
+    removeContext(context: string): Promise<void>;
     originateLocalChannel(context: string, extension: string): Promise<void>;
     disconnect(): void;
 }
