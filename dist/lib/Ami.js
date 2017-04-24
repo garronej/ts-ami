@@ -39,6 +39,7 @@ var credential_1 = require("./credential");
 var AstMan = require("asterisk-manager");
 var ts_events_extended_1 = require("ts-events-extended");
 var pr = require("ts-promisify");
+var js_base64_1 = require("js-base64");
 exports.generateUniqueActionId = (function () {
     var counter = Date.now();
     return function () { return (counter++).toString(); };
@@ -49,6 +50,13 @@ var Ami = (function () {
         this.evt = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
         this.lastActionId = "";
+        this.messageSend = function (to, from, body, headers) { return _this.postAction({
+            "action": "MessageSend",
+            to: to,
+            from: from,
+            "variable": headers,
+            "base64body": js_base64_1.Base64.encode(body)
+        }); };
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
         this.ami = new AstMan(port, host, user, secret, true);
         this.ami.keepConnected();

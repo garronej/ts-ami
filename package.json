@@ -1,6 +1,6 @@
 {
   "name": "ts-ami",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "AMI client",
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
@@ -23,10 +23,12 @@
     "ini-extended": "garronej/ini-extended",
     "rejection-tracker": "garronej/rejection-tracker",
     "ts-events-extended": "garronej/ts-events-extended",
-    "ts-promisify": "garronej/ts-promisify"
+    "ts-promisify": "garronej/ts-promisify",
+    "js-base64": "^2.1.9"
   },
   "devDependencies": {
     "typescript": "^2.2.1",
-    "@types/node": "^4.2.2"
+    "@types/node": "^4.2.2",
+    "@types/js-base64": "^2.1.5"
   }
 }

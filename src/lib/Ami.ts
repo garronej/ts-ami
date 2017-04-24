@@ -2,12 +2,14 @@ import { retrieveCredential, Credential } from "./credential";
 import * as AstMan from "asterisk-manager";
 import { SyncEvent } from "ts-events-extended";
 import * as pr from "ts-promisify";
+import { Base64 } from "js-base64";
 
 export interface ManagerEvent {
     event: string;
     privilege: string;
     [header: string]: string;
 }
+
 
 export const generateUniqueActionId = (() => {
 
@@ -57,7 +59,8 @@ export class Ami {
 
     public postAction(action: {
         action: string;
-        [key: string]: string
+        value?: string | string[];
+        [key: string]: any;
     }): Promise<any> {
 
         if (!action.actionid)
@@ -78,6 +81,22 @@ export class Ami {
         });
 
     }
+
+    public readonly messageSend = (
+        to: string,
+        from: string,
+        body: string,
+        headers: { [header: string]: string; }
+    ) => this.postAction({
+        "action": "MessageSend",
+        to,
+        from,
+        "variable": headers,
+        "base64body": Base64.encode(body)
+    });
+
+
+
 
     public async addDialplanExtension(
         extension: string,
@@ -107,8 +126,8 @@ export class Ami {
 
         let rawCommand = `dialplan remove extension ${extension}@${context}`;
 
-        if( priority !== undefined )
-            rawCommand+= ` ${priority}`;
+        if (priority !== undefined)
+            rawCommand += ` ${priority}`;
 
         await this.postAction({
             "action": "Command",
@@ -117,7 +136,7 @@ export class Ami {
 
     }
 
-    public async removeContext( context: string) {
+    public async removeContext(context: string) {
 
         let rawCommand = `dialplan remove context ${context}`;
 

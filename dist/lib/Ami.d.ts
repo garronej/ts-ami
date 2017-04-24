@@ -19,8 +19,12 @@ export declare class Ami {
     lastActionId: string;
     postAction(action: {
         action: string;
-        [key: string]: string;
+        value?: string | string[];
+        [key: string]: any;
     }): Promise<any>;
+    readonly messageSend: (to: string, from: string, body: string, headers: {
+        [header: string]: string;
+    }) => Promise<any>;
     addDialplanExtension(extension: string, priority: number, action: string, context: string, replace?: boolean): Promise<void>;
     removeExtension(extension: string, context: string, priority?: number): Promise<void>;
     removeContext(context: string): Promise<void>;
