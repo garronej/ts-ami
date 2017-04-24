@@ -86,12 +86,12 @@ export class Ami {
         to: string,
         from: string,
         body: string,
-        headers: { [header: string]: string; }
+        headers?: { [header: string]: string; }
     ) => this.postAction({
         "action": "MessageSend",
         to,
         from,
-        "variable": headers,
+        "variable": headers || {},
         "base64body": Base64.encode(body)
     });
 

@@ -54,7 +54,7 @@ var Ami = (function () {
             "action": "MessageSend",
             to: to,
             from: from,
-            "variable": headers,
+            "variable": headers || {},
             "base64body": js_base64_1.Base64.encode(body)
         }); };
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
