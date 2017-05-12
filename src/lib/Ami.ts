@@ -10,7 +10,7 @@ export interface ManagerEvent {
     [header: string]: string;
 }
 
-export const lineMaxLength= 1024;
+export const lineMaxByteLength= 1024;
 
 export const generateUniqueActionId = (() => {
 
@@ -84,7 +84,7 @@ export class Ami {
                 } else line = `${key}: ${action[key]}\r\n`;
 
 
-                if (line.length > lineMaxLength)
+                if (Buffer.byteLength(line) > lineMaxByteLength)
                     throw new Error(`Line too long: ${line}`);
 
             }

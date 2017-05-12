@@ -40,7 +40,7 @@ var AstMan = require("asterisk-manager");
 var ts_events_extended_1 = require("ts-events-extended");
 var pr = require("ts-promisify");
 var js_base64_1 = require("js-base64");
-exports.lineMaxLength = 1024;
+exports.lineMaxByteLength = 1024;
 exports.generateUniqueActionId = (function () {
     var counter = Date.now();
     return function () { return (counter++).toString(); };
@@ -91,7 +91,7 @@ var Ami = (function () {
                             }
                             else
                                 line = key + ": " + action[key] + "\r\n";
-                            if (line.length > exports.lineMaxLength)
+                            if (Buffer.byteLength(line) > exports.lineMaxByteLength)
                                 throw new Error("Line too long: " + line);
                         }
                         if (!action.actionid)

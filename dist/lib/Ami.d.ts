@@ -5,7 +5,7 @@ export interface ManagerEvent {
     privilege: string;
     [header: string]: string;
 }
-export declare const lineMaxLength = 1024;
+export declare const lineMaxByteLength = 1024;
 export declare const generateUniqueActionId: () => string;
 export declare class Ami {
     private static localClient;
