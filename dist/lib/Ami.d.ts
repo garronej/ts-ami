@@ -5,6 +5,7 @@ export interface ManagerEvent {
     privilege: string;
     [header: string]: string;
 }
+export declare const lineMaxLength = 1024;
 export declare const generateUniqueActionId: () => string;
 export declare class Ami {
     private static localClient;
@@ -19,7 +20,9 @@ export declare class Ami {
     lastActionId: string;
     postAction(action: {
         action: string;
-        value?: string | string[];
+        variable?: string | {
+            [key: string]: string;
+        };
         [key: string]: any;
     }): Promise<any>;
     readonly messageSend: (to: string, from: string, body: string, headers?: {

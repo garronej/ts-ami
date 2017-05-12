@@ -40,6 +40,7 @@ var AstMan = require("asterisk-manager");
 var ts_events_extended_1 = require("ts-events-extended");
 var pr = require("ts-promisify");
 var js_base64_1 = require("js-base64");
+exports.lineMaxLength = 1024;
 exports.generateUniqueActionId = (function () {
     var counter = Date.now();
     return function () { return (counter++).toString(); };
@@ -72,18 +73,35 @@ var Ami = (function () {
     ;
     Ami.prototype.postAction = function (action) {
         var _this = this;
-        if (!action.actionid)
-            action.actionid = exports.generateUniqueActionId();
-        this.lastActionId = action.actionid;
         return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var line, _i, _a, key, variable, _b, _c, variableKey;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
+                        for (_i = 0, _a = Object.keys(action); _i < _a.length; _i++) {
+                            key = _a[_i];
+                            if (key === "variable" && typeof (action.variable) === "object") {
+                                variable = action.variable;
+                                line = "Variable: ";
+                                for (_b = 0, _c = Object.keys(variable); _b < _c.length; _b++) {
+                                    variableKey = _c[_b];
+                                    line += variableKey + "=" + variable[variableKey] + ",";
+                                }
+                                line = line.slice(0, -1) + "\r\n";
+                            }
+                            else
+                                line = key + ": " + action[key] + "\r\n";
+                            if (line.length > exports.lineMaxLength)
+                                throw new Error("Line too long: " + line);
+                        }
+                        if (!action.actionid)
+                            action.actionid = exports.generateUniqueActionId();
+                        this.lastActionId = action.actionid;
                         if (!!this.isFullyBooted) return [3 /*break*/, 2];
                         return [4 /*yield*/, pr.generic(this.ami, this.ami.once)("fullybooted")];
                     case 1:
-                        _a.sent();
-                        _a.label = 2;
+                        _d.sent();
+                        _d.label = 2;
                     case 2:
                         this.ami.actionExpectSingleResponse(action, function (error, res) { return error ? reject(error) : resolve(res); });
                         return [2 /*return*/];

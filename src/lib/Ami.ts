@@ -10,6 +10,7 @@ export interface ManagerEvent {
     [header: string]: string;
 }
 
+export const lineMaxLength= 1024;
 
 export const generateUniqueActionId = (() => {
 
@@ -59,16 +60,39 @@ export class Ami {
 
     public postAction(action: {
         action: string;
-        value?: string | string[];
+        variable?: string | { [key: string]: string };
         [key: string]: any;
     }): Promise<any> {
 
-        if (!action.actionid)
-            action.actionid = generateUniqueActionId();
-
-        this.lastActionId = action.actionid;
-
         return new Promise<void>(async (resolve, reject) => {
+
+            let line: string;
+
+            for (let key of Object.keys(action)) {
+
+                if (key === "variable" && typeof(action.variable) === "object" ) {
+
+                    let variable = action.variable;
+
+                    line = `Variable: `;
+
+                    for (let variableKey of Object.keys(variable))
+                        line += `${variableKey}=${variable[variableKey]},`;
+
+                    line = line.slice(0, -1) + "\r\n";
+
+                } else line = `${key}: ${action[key]}\r\n`;
+
+
+                if (line.length > lineMaxLength)
+                    throw new Error(`Line too long: ${line}`);
+
+            }
+
+            if (!action.actionid)
+                action.actionid = generateUniqueActionId();
+
+            this.lastActionId = action.actionid;
 
             if (!this.isFullyBooted)
                 await pr.generic(this.ami, this.ami.once)("fullybooted");
