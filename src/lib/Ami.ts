@@ -146,12 +146,15 @@ export class Ami {
             "action": "DialplanExtensionAdd",
             extension,
             "priority": `${priority}`,
-            context
+            context,
+            application
         };
 
         if (applicationData) action["applicationdata"] = applicationData;
 
         if (replace !== false ) action["replace"] = `${true}`;
+
+        console.log({ action });
 
         await this.postAction(action);
 
@@ -169,32 +172,49 @@ export class Ami {
 
     }
 
+    public async runCliCommand(cliCommand: string): Promise<string>{
+
+        return (await this.postAction({
+            "action": "Command",
+            "Command": cliCommand
+        })).content;
+
+    }
+
     public async removeExtension(
         extension: string,
         context: string,
         priority?: number
     ) {
 
-        let rawCommand = `dialplan remove extension ${extension}@${context}`;
+        let cliCommand = `dialplan remove extension ${extension}@${context}`;
 
         if (priority !== undefined)
-            rawCommand += ` ${priority}`;
+            cliCommand += ` ${priority}`;
+            
+        await this.runCliCommand(cliCommand);
 
+        /*
         await this.postAction({
             "action": "Command",
-            "Command": rawCommand
+            "Command": cliCommand
         });
+        */
 
     }
 
     public async removeContext(context: string) {
 
-        let rawCommand = `dialplan remove context ${context}`;
+        let cliCommand = `dialplan remove context ${context}`;
 
+        await this.runCliCommand(cliCommand);
+
+        /*
         await this.postAction({
             "action": "Command",
-            "Command": rawCommand
+            "Command": cliCommand
         });
+        */
 
     }
 

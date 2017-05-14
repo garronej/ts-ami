@@ -1,4 +1,14 @@
 "use strict";
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var ini_extended_1 = require("ini-extended");
 var fs_1 = require("fs");
@@ -18,26 +28,36 @@ function retrieveCredential(params) {
     if (params.user && !config[params.user])
         throw new Error("User " + params.user + " not found in config file");
     var usersToTest = params.user ? [params.user] : Object.keys(config);
-    for (var _i = 0, usersToTest_1 = usersToTest; _i < usersToTest_1.length; _i++) {
-        var userName = usersToTest_1[_i];
-        var userConfig = config[userName];
-        if (!userConfig.secret ||
-            !userConfig.write ||
-            !userConfig.read)
-            continue;
-        if (isGranted(getListAuthority(userConfig.read)) &&
-            isGranted(getListAuthority(userConfig.write))) {
-            if (general.enabled !== "yes")
-                throw new Error("NOT_ENABLED");
-            return {
-                port: port,
-                host: host,
-                "user": userName,
-                "secret": userConfig.secret
-            };
+    try {
+        for (var usersToTest_1 = __values(usersToTest), usersToTest_1_1 = usersToTest_1.next(); !usersToTest_1_1.done; usersToTest_1_1 = usersToTest_1.next()) {
+            var userName = usersToTest_1_1.value;
+            var userConfig = config[userName];
+            if (!userConfig.secret ||
+                !userConfig.write ||
+                !userConfig.read)
+                continue;
+            if (isGranted(getListAuthority(userConfig.read)) &&
+                isGranted(getListAuthority(userConfig.write))) {
+                if (general.enabled !== "yes")
+                    throw new Error("NOT_ENABLED");
+                return {
+                    port: port,
+                    host: host,
+                    "user": userName,
+                    "secret": userConfig.secret
+                };
+            }
         }
     }
+    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+    finally {
+        try {
+            if (usersToTest_1_1 && !usersToTest_1_1.done && (_a = usersToTest_1.return)) _a.call(usersToTest_1);
+        }
+        finally { if (e_1) throw e_1.error; }
+    }
     throw Error("NO_USER");
+    var e_1, _a;
 }
 exports.retrieveCredential = retrieveCredential;
 function getListAuthority(strList) {

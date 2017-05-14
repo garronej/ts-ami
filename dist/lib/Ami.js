@@ -8,8 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t;
-    return { next: verb(0), "throw": verb(1), "return": verb(2) };
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
@@ -33,6 +33,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
+};
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var credential_1 = require("./credential");
@@ -74,25 +84,43 @@ var Ami = (function () {
     Ami.prototype.postAction = function (action) {
         var _this = this;
         return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var line, _i, _a, key, variable, _b, _c, variableKey;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var line, _a, _b, key, variable, _c, _d, variableKey, e_1, _e, e_2, _f;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
                     case 0:
-                        for (_i = 0, _a = Object.keys(action); _i < _a.length; _i++) {
-                            key = _a[_i];
-                            if (key === "variable" && typeof (action.variable) === "object") {
-                                variable = action.variable;
-                                line = "Variable: ";
-                                for (_b = 0, _c = Object.keys(variable); _b < _c.length; _b++) {
-                                    variableKey = _c[_b];
-                                    line += variableKey + "=" + variable[variableKey] + ",";
+                        try {
+                            for (_a = __values(Object.keys(action)), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                key = _b.value;
+                                if (key === "variable" && typeof (action.variable) === "object") {
+                                    variable = action.variable;
+                                    line = "Variable: ";
+                                    try {
+                                        for (_c = __values(Object.keys(variable)), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                            variableKey = _d.value;
+                                            line += variableKey + "=" + variable[variableKey] + ",";
+                                        }
+                                    }
+                                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                                    finally {
+                                        try {
+                                            if (_d && !_d.done && (_f = _c.return)) _f.call(_c);
+                                        }
+                                        finally { if (e_2) throw e_2.error; }
+                                    }
+                                    line = line.slice(0, -1) + "\r\n";
                                 }
-                                line = line.slice(0, -1) + "\r\n";
+                                else
+                                    line = key + ": " + action[key] + "\r\n";
+                                if (Buffer.byteLength(line) > exports.lineMaxByteLength)
+                                    throw new Error("Line too long: " + line);
                             }
-                            else
-                                line = key + ": " + action[key] + "\r\n";
-                            if (Buffer.byteLength(line) > exports.lineMaxByteLength)
-                                throw new Error("Line too long: " + line);
+                        }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        finally {
+                            try {
+                                if (_b && !_b.done && (_e = _a.return)) _e.call(_a);
+                            }
+                            finally { if (e_1) throw e_1.error; }
                         }
                         if (!action.actionid)
                             action.actionid = exports.generateUniqueActionId();
@@ -100,8 +128,8 @@ var Ami = (function () {
                         if (!!this.isFullyBooted) return [3 /*break*/, 2];
                         return [4 /*yield*/, pr.generic(this.ami, this.ami.once)("fullybooted")];
                     case 1:
-                        _d.sent();
-                        _d.label = 2;
+                        _g.sent();
+                        _g.label = 2;
                     case 2:
                         this.ami.actionExpectSingleResponse(action, function (error, res) { return error ? reject(error) : resolve(res); });
                         return [2 /*return*/];
@@ -119,12 +147,14 @@ var Ami = (function () {
                             "action": "DialplanExtensionAdd",
                             extension: extension,
                             "priority": "" + priority,
-                            context: context
+                            context: context,
+                            application: application
                         };
                         if (applicationData)
                             action["applicationdata"] = applicationData;
                         if (replace !== false)
                             action["replace"] = "" + true;
+                        console.log({ action: action });
                         return [4 /*yield*/, this.postAction(action)];
                     case 1:
                         _a.sent();
@@ -133,19 +163,29 @@ var Ami = (function () {
             });
         });
     };
+    Ami.prototype.runCliCommand = function (cliCommand) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.postAction({
+                            "action": "Command",
+                            "Command": cliCommand
+                        })];
+                    case 1: return [2 /*return*/, (_a.sent()).content];
+                }
+            });
+        });
+    };
     Ami.prototype.removeExtension = function (extension, context, priority) {
         return __awaiter(this, void 0, void 0, function () {
-            var rawCommand;
+            var cliCommand;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        rawCommand = "dialplan remove extension " + extension + "@" + context;
+                        cliCommand = "dialplan remove extension " + extension + "@" + context;
                         if (priority !== undefined)
-                            rawCommand += " " + priority;
-                        return [4 /*yield*/, this.postAction({
-                                "action": "Command",
-                                "Command": rawCommand
-                            })];
+                            cliCommand += " " + priority;
+                        return [4 /*yield*/, this.runCliCommand(cliCommand)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -155,15 +195,12 @@ var Ami = (function () {
     };
     Ami.prototype.removeContext = function (context) {
         return __awaiter(this, void 0, void 0, function () {
-            var rawCommand;
+            var cliCommand;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        rawCommand = "dialplan remove context " + context;
-                        return [4 /*yield*/, this.postAction({
-                                "action": "Command",
-                                "Command": rawCommand
-                            })];
+                        cliCommand = "dialplan remove context " + context;
+                        return [4 /*yield*/, this.runCliCommand(cliCommand)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];

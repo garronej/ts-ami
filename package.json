@@ -6,7 +6,7 @@
   "types": "./dist/lib/index.d.ts",
   "scripts": {
     "tsc": "node ./node_modules/.bin/tsc -p ./tsconfig.json",
-    "test": "node ./dist/test/credential"
+    "test": "node ./dist/test/main"
   },
   "repository": {
     "type": "git",
