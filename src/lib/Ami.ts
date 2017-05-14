@@ -125,8 +125,8 @@ export class Ami {
     public async addDialplanExtension(
         extension: string,
         priority: number,
-        application: string,
         context: string,
+        application: string,
         applicationData?: string,
         replace?: boolean
     ) {
