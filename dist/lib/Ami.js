@@ -109,20 +109,22 @@ var Ami = (function () {
             });
         }); });
     };
-    Ami.prototype.addDialplanExtension = function (extension, priority, action, context, replace) {
+    Ami.prototype.addDialplanExtension = function (extension, priority, application, applicationData, context, replace) {
         return __awaiter(this, void 0, void 0, function () {
-            var rawCommand;
+            var action;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        rawCommand = [
-                            "dialplan add extension " + extension + "," + priority + "," + action,
-                            " into " + context + ((replace !== false) ? " replace" : "")
-                        ].join("");
-                        return [4 /*yield*/, this.postAction({
-                                "action": "Command",
-                                "Command": rawCommand
-                            })];
+                        action = {
+                            "action": "DialplanExtensionAdd",
+                            context: context,
+                            priority: priority
+                        };
+                        if (replace)
+                            action["replace"] = "" + true;
+                        if (applicationData)
+                            action["applicationdata"] = applicationData;
+                        return [4 /*yield*/, this.postAction(action)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];

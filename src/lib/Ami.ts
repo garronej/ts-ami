@@ -125,11 +125,36 @@ export class Ami {
     public async addDialplanExtension(
         extension: string,
         priority: number,
-        action: string,
+        application: string,
+        applicationData: string | undefined,
         context: string,
         replace?: boolean
     ) {
 
+        /*
+        Action: DialplanExtensionAdd
+        ActionID: <value>
+        Context: <value>
+        Extension: <value>
+        Priority: <value>
+        Application: <value>
+        [ApplicationData:] <value>
+        [Replace:] <value>
+        */
+
+        let action = {
+            "action": "DialplanExtensionAdd",
+            context,
+            priority
+        };
+
+        if (replace) action["replace"] = `${true}`;
+
+        if (applicationData) action["applicationdata"] = applicationData;
+
+        await this.postAction(action);
+
+        /*
         let rawCommand = [
             `dialplan add extension ${extension},${priority},${action}`,
             ` into ${context}${(replace !== false) ? " replace" : ""}`
@@ -139,6 +164,7 @@ export class Ami {
             "action": "Command",
             "Command": rawCommand
         });
+        */
 
     }
 

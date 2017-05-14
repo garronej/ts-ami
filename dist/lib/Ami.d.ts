@@ -28,7 +28,7 @@ export declare class Ami {
     readonly messageSend: (to: string, from: string, body: string, headers?: {
         [header: string]: string;
     } | undefined) => Promise<any>;
-    addDialplanExtension(extension: string, priority: number, action: string, context: string, replace?: boolean): Promise<void>;
+    addDialplanExtension(extension: string, priority: number, application: string, applicationData: string | undefined, context: string, replace?: boolean): Promise<void>;
     removeExtension(extension: string, context: string, priority?: number): Promise<void>;
     removeContext(context: string): Promise<void>;
     originateLocalChannel(context: string, extension: string): Promise<void>;
