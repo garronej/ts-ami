@@ -117,13 +117,14 @@ var Ami = (function () {
                     case 0:
                         action = {
                             "action": "DialplanExtensionAdd",
+                            extension: extension,
+                            priority: priority,
                             context: context,
-                            priority: priority
                         };
-                        if (replace !== false)
-                            action["replace"] = "" + true;
                         if (applicationData)
                             action["applicationdata"] = applicationData;
+                        if (replace !== false)
+                            action["replace"] = "" + true;
                         return [4 /*yield*/, this.postAction(action)];
                     case 1:
                         _a.sent();

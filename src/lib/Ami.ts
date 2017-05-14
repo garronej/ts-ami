@@ -144,13 +144,14 @@ export class Ami {
 
         let action = {
             "action": "DialplanExtensionAdd",
+            extension,
+            priority,
             context,
-            priority
         };
 
-        if (replace !== false ) action["replace"] = `${true}`;
-
         if (applicationData) action["applicationdata"] = applicationData;
+
+        if (replace !== false ) action["replace"] = `${true}`;
 
         await this.postAction(action);
 
