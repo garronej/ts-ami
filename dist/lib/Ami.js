@@ -118,8 +118,8 @@ var Ami = (function () {
                         action = {
                             "action": "DialplanExtensionAdd",
                             extension: extension,
-                            priority: priority,
-                            context: context,
+                            "priority": "" + priority,
+                            context: context
                         };
                         if (applicationData)
                             action["applicationdata"] = applicationData;

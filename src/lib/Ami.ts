@@ -145,8 +145,8 @@ export class Ami {
         let action = {
             "action": "DialplanExtensionAdd",
             extension,
-            priority,
-            context,
+            "priority": `${priority}`,
+            context
         };
 
         if (applicationData) action["applicationdata"] = applicationData;
