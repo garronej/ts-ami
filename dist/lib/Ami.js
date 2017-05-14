@@ -120,7 +120,7 @@ var Ami = (function () {
                             context: context,
                             priority: priority
                         };
-                        if (replace)
+                        if (replace !== false)
                             action["replace"] = "" + true;
                         if (applicationData)
                             action["applicationdata"] = applicationData;

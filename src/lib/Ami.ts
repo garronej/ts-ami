@@ -148,7 +148,7 @@ export class Ami {
             priority
         };
 
-        if (replace) action["replace"] = `${true}`;
+        if (replace !== false ) action["replace"] = `${true}`;
 
         if (applicationData) action["applicationdata"] = applicationData;
 
