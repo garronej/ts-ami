@@ -109,7 +109,7 @@ var Ami = (function () {
             });
         }); });
     };
-    Ami.prototype.addDialplanExtension = function (extension, priority, application, applicationData, context, replace) {
+    Ami.prototype.addDialplanExtension = function (extension, priority, application, context, applicationData, replace) {
         return __awaiter(this, void 0, void 0, function () {
             var action;
             return __generator(this, function (_a) {

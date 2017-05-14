@@ -126,8 +126,8 @@ export class Ami {
         extension: string,
         priority: number,
         application: string,
-        applicationData: string | undefined,
         context: string,
+        applicationData?: string,
         replace?: boolean
     ) {
 
