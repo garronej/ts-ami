@@ -154,7 +154,6 @@ var Ami = (function () {
                             action["applicationdata"] = applicationData;
                         if (replace !== false)
                             action["replace"] = "" + true;
-                        console.log({ action: action });
                         return [4 /*yield*/, this.postAction(action)];
                     case 1:
                         _a.sent();

@@ -154,8 +154,6 @@ export class Ami {
 
         if (replace !== false ) action["replace"] = `${true}`;
 
-        console.log({ action });
-
         await this.postAction(action);
 
         /*
