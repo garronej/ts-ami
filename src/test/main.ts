@@ -7,7 +7,7 @@ import { Ami } from "../lib";
 
     let ami = Ami.localhost();
 
-    await ami.addDialplanExtension("my-extension", 1, "my-context", "NoOp", "Hello Im here");
+    await ami.addDialplanExtension("my-context","my-extension", 1, "NoOp", "Hello Im here");
 
     let resp = await Ami.localhost().runCliCommand("dialplan show");
 

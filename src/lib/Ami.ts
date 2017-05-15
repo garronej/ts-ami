@@ -123,9 +123,9 @@ export class Ami {
 
 
     public async addDialplanExtension(
-        extension: string,
-        priority: number,
         context: string,
+        extension: string,
+        priority: number | string,
         application: string,
         applicationData?: string,
         replace?: boolean
