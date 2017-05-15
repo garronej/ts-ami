@@ -28,7 +28,7 @@ export declare class Ami {
     readonly messageSend: (to: string, from: string, body: string, headers?: {
         [header: string]: string;
     } | undefined) => Promise<any>;
-    addDialplanExtension(extension: string, priority: number, context: string, application: string, applicationData?: string, replace?: boolean): Promise<void>;
+    addDialplanExtension(context: string, extension: string, priority: number | string, application: string, applicationData?: string, replace?: boolean): Promise<void>;
     runCliCommand(cliCommand: string): Promise<string>;
     removeExtension(extension: string, context: string, priority?: number): Promise<void>;
     removeContext(context: string): Promise<void>;
