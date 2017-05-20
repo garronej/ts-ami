@@ -15,4 +15,19 @@ import { Ami } from "../lib";
 
     console.log(resp);
 
+});
+
+(async function testSetGetVariable() {
+
+    let ami= Ami.localhost();
+
+    let [variable, value ]= ["FOO_BAR", "BAR_BAZ_FOO" ];
+
+    await ami.setVar(variable, value);
+
+    console.assert( ( await ami.getVar(variable) ) === value );
+
+    console.log("PASS");
+
+
 })();

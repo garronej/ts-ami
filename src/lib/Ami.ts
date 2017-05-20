@@ -94,6 +94,9 @@ export class Ami {
 
             this.lastActionId = action.actionid;
 
+            //TODO:  warning: possible EventEmitter memory leak detected. 
+            //11 fullybooted listeners added. Use emitter.setMaxListeners() to increase limit.
+
             if (!this.isFullyBooted)
                 await pr.generic(this.ami, this.ami.once)("fullybooted");
 
@@ -118,6 +121,33 @@ export class Ami {
         "variable": headers || {},
         "base64body": Base64.encode(body)
     });
+
+    public async setVar(
+        variable: string,
+        value: string,
+        channel?: string
+    ){
+
+        let action = { "action": "SetVar", variable, value };
+
+        if( channel ) action= { ...action, channel };
+
+        await this.postAction(action);
+
+    }
+
+    public async getVar(
+        variable: string,
+        channel?: string
+    ): Promise<string> {
+
+        let action= { "action": "GetVar", variable };
+
+        if( channel ) action= { ...action, channel };
+
+        return (await this.postAction(action)).value;
+
+    }
 
 
 

@@ -28,6 +28,8 @@ export declare class Ami {
     readonly messageSend: (to: string, from: string, body: string, headers?: {
         [header: string]: string;
     } | undefined) => Promise<any>;
+    setVar(variable: string, value: string, channel?: string): Promise<void>;
+    getVar(variable: string, channel?: string): Promise<string>;
     addDialplanExtension(context: string, extension: string, priority: number | string, application: string, applicationData?: string, replace?: boolean): Promise<void>;
     runCliCommand(cliCommand: string): Promise<string>;
     removeExtension(extension: string, context: string, priority?: number): Promise<void>;
