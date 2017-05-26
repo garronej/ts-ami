@@ -30,10 +30,10 @@ export declare class Ami {
     } | undefined) => Promise<any>;
     setVar(variable: string, value: string, channel?: string): Promise<void>;
     getVar(variable: string, channel?: string): Promise<string>;
-    addDialplanExtension(context: string, extension: string, priority: number | string, application: string, applicationData?: string, replace?: boolean): Promise<void>;
+    dialplanExtensionAdd(context: string, extension: string, priority: number | string, application: string, applicationData?: string, replace?: boolean): Promise<void>;
     runCliCommand(cliCommand: string): Promise<string>;
-    removeExtension(extension: string, context: string, priority?: number): Promise<void>;
-    removeContext(context: string): Promise<void>;
+    dialplanExtensionRemove(context: string, extension: string, priority?: number | string): Promise<boolean>;
+    removeContext(context: string): Promise<boolean>;
     originateLocalChannel(context: string, extension: string): Promise<void>;
     disconnect(): void;
 }

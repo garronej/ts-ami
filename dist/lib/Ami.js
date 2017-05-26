@@ -78,6 +78,7 @@ var Ami = (function () {
         }); };
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
         this.ami = new AstMan(port, host, user, secret, true);
+        this.ami.setMaxListeners(Infinity);
         this.ami.keepConnected();
         this.ami.on("managerevent", function (evt) { return _this.evt.post(evt); });
         this.ami.on("fullybooted", function () { _this.isFullyBooted = true; });
@@ -177,9 +178,9 @@ var Ami = (function () {
             });
         });
     };
-    Ami.prototype.addDialplanExtension = function (context, extension, priority, application, applicationData, replace) {
+    Ami.prototype.dialplanExtensionAdd = function (context, extension, priority, application, applicationData, replace) {
         return __awaiter(this, void 0, void 0, function () {
-            var action;
+            var action, res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -196,53 +197,79 @@ var Ami = (function () {
                             action["replace"] = "" + true;
                         return [4 /*yield*/, this.postAction(action)];
                     case 1:
-                        _a.sent();
+                        res = _a.sent();
                         return [2 /*return*/];
                 }
             });
         });
     };
+    //Only with asterisk 14+ ( broken in asterisk )
     Ami.prototype.runCliCommand = function (cliCommand) {
         return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.postAction({
-                            "action": "Command",
-                            "Command": cliCommand
-                        })];
-                    case 1: return [2 /*return*/, (_a.sent()).content];
+            var output, _a, output;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _b.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, this.postAction({
+                                "action": "Command",
+                                "Command": cliCommand
+                            })];
+                    case 1:
+                        output = (_b.sent()).output;
+                        return [2 /*return*/, output.join("\n")];
+                    case 2:
+                        _a = _b.sent();
+                        output = _a.output;
+                        throw new Error(output.join("\n"));
+                    case 3: return [2 /*return*/];
                 }
             });
         });
     };
-    Ami.prototype.removeExtension = function (extension, context, priority) {
+    Ami.prototype.dialplanExtensionRemove = function (context, extension, priority) {
         return __awaiter(this, void 0, void 0, function () {
-            var cliCommand;
+            var action, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        cliCommand = "dialplan remove extension " + extension + "@" + context;
+                        action = { "action": "DialplanExtensionRemove", context: context, extension: extension };
                         if (priority !== undefined)
-                            cliCommand += " " + priority;
-                        return [4 /*yield*/, this.runCliCommand(cliCommand)];
+                            action = __assign({}, action, { "priority": "" + priority });
+                        _a.label = 1;
                     case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.postAction(action)];
+                    case 2:
                         _a.sent();
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
+                    case 3:
+                        error_1 = _a.sent();
+                        return [2 /*return*/, false];
+                    case 4: return [2 /*return*/];
                 }
             });
         });
     };
+    //Only Asterisk 14+
     Ami.prototype.removeContext = function (context) {
         return __awaiter(this, void 0, void 0, function () {
-            var cliCommand;
+            var cliCommand, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         cliCommand = "dialplan remove context " + context;
-                        return [4 /*yield*/, this.runCliCommand(cliCommand)];
+                        _a.label = 1;
                     case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.runCliCommand(cliCommand)];
+                    case 2:
                         _a.sent();
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
+                    case 3:
+                        error_2 = _a.sent();
+                        return [2 /*return*/, false];
+                    case 4: return [2 /*return*/];
                 }
             });
         });

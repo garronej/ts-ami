@@ -47,6 +47,8 @@ export class Ami {
 
         this.ami = new AstMan(port, host, user, secret, true);
 
+        this.ami.setMaxListeners(Infinity);
+
         this.ami.keepConnected();
 
         this.ami.on("managerevent", evt => this.evt.post(evt));
@@ -152,7 +154,7 @@ export class Ami {
 
 
 
-    public async addDialplanExtension(
+    public async dialplanExtensionAdd(
         context: string,
         extension: string,
         priority: number | string,
@@ -160,17 +162,6 @@ export class Ami {
         applicationData?: string,
         replace?: boolean
     ) {
-
-        /*
-        Action: DialplanExtensionAdd
-        ActionID: <value>
-        Context: <value>
-        Extension: <value>
-        Priority: <value>
-        Application: <value>
-        [ApplicationData:] <value>
-        [Replace:] <value>
-        */
 
         let action = {
             "action": "DialplanExtensionAdd",
@@ -184,65 +175,72 @@ export class Ami {
 
         if (replace !== false ) action["replace"] = `${true}`;
 
-        await this.postAction(action);
+        let res= await this.postAction(action);
 
-        /*
-        let rawCommand = [
-            `dialplan add extension ${extension},${priority},${action}`,
-            ` into ${context}${(replace !== false) ? " replace" : ""}`
-        ].join("");
-
-        await this.postAction({
-            "action": "Command",
-            "Command": rawCommand
-        });
-        */
 
     }
 
-    public async runCliCommand(cliCommand: string): Promise<string>{
+    //Only with asterisk 14+ ( broken in asterisk )
+    public async runCliCommand(cliCommand: string): Promise<string> {
 
-        return (await this.postAction({
-            "action": "Command",
-            "Command": cliCommand
-        })).content;
+        try {
+
+            let { output } = await this.postAction({
+                "action": "Command",
+                "Command": cliCommand
+            });
+
+            return output.join("\n");
+
+        } catch ({ output }) {
+
+            throw new Error(output.join("\n"));
+
+        }
 
     }
 
-    public async removeExtension(
-        extension: string,
+    public async dialplanExtensionRemove(
         context: string,
-        priority?: number
-    ) {
+        extension: string,
+        priority?: number | string
+    ): Promise<boolean> {
 
-        let cliCommand = `dialplan remove extension ${extension}@${context}`;
 
-        if (priority !== undefined)
-            cliCommand += ` ${priority}`;
-            
-        await this.runCliCommand(cliCommand);
+        let action = { "action": "DialplanExtensionRemove", context, extension };
 
-        /*
-        await this.postAction({
-            "action": "Command",
-            "Command": cliCommand
-        });
-        */
+        if (priority !== undefined) action = { ...action, "priority": `${priority}` };
+
+        try {
+
+            await this.postAction(action);
+
+            return true;
+
+        } catch (error) {
+
+            return false;
+        }
+
 
     }
 
-    public async removeContext(context: string) {
+    //Only Asterisk 14+
+    public async removeContext(context: string): Promise<boolean> {
 
         let cliCommand = `dialplan remove context ${context}`;
 
-        await this.runCliCommand(cliCommand);
+        try {
 
-        /*
-        await this.postAction({
-            "action": "Command",
-            "Command": cliCommand
-        });
-        */
+            await this.runCliCommand(cliCommand);
+
+            return true;
+
+        } catch (error) {
+
+            return false;
+
+        }
 
     }
 
