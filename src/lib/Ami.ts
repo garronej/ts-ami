@@ -96,13 +96,10 @@ export class Ami {
 
             this.lastActionId = action.actionid;
 
-            //TODO:  warning: possible EventEmitter memory leak detected. 
-            //11 fullybooted listeners added. Use emitter.setMaxListeners() to increase limit.
-
             if (!this.isFullyBooted)
                 await pr.generic(this.ami, this.ami.once)("fullybooted");
 
-            this.ami.actionExpectSingleResponse(
+            this.ami.action(
                 action,
                 (error, res) => error ? reject(error) : resolve(res)
             );
@@ -180,21 +177,30 @@ export class Ami {
 
     }
 
-    //Only with asterisk 14+ ( broken in asterisk )
     public async runCliCommand(cliCommand: string): Promise<string> {
 
         try {
 
-            let { output } = await this.postAction({
+            let resp = await this.postAction({
                 "action": "Command",
                 "Command": cliCommand
             });
 
-            return output.join("\n");
+            if( "content" in resp ) return resp.content;
+            else{
 
-        } catch ({ output }) {
+                let { output } = resp;
 
-            throw new Error(output.join("\n"));
+                return (typeof output === "string" )?output:output.join("\n");
+
+            }
+
+
+        } catch (errorResp) {
+
+            if( "output" in errorResp ) return errorResp.output.join("\n");
+
+            throw errorResp;
 
         }
 
@@ -225,22 +231,11 @@ export class Ami {
 
     }
 
-    //Only Asterisk 14+
-    public async removeContext(context: string): Promise<boolean> {
+    public async removeContext(context: string): Promise<string> {
 
-        let cliCommand = `dialplan remove context ${context}`;
-
-        try {
-
-            await this.runCliCommand(cliCommand);
-
-            return true;
-
-        } catch (error) {
-
-            return false;
-
-        }
+        return await this.runCliCommand(
+            `dialplan remove context ${context}`
+        );
 
     }
 

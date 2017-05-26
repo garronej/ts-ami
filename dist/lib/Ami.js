@@ -140,7 +140,7 @@ var Ami = (function () {
                         _g.sent();
                         _g.label = 2;
                     case 2:
-                        this.ami.actionExpectSingleResponse(action, function (error, res) { return error ? reject(error) : resolve(res); });
+                        this.ami.action(action, function (error, res) { return error ? reject(error) : resolve(res); });
                         return [2 /*return*/];
                 }
             });
@@ -203,25 +203,31 @@ var Ami = (function () {
             });
         });
     };
-    //Only with asterisk 14+ ( broken in asterisk )
     Ami.prototype.runCliCommand = function (cliCommand) {
         return __awaiter(this, void 0, void 0, function () {
-            var output, _a, output;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var resp, output, errorResp_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
-                        _b.trys.push([0, 2, , 3]);
+                        _a.trys.push([0, 2, , 3]);
                         return [4 /*yield*/, this.postAction({
                                 "action": "Command",
                                 "Command": cliCommand
                             })];
                     case 1:
-                        output = (_b.sent()).output;
-                        return [2 /*return*/, output.join("\n")];
+                        resp = _a.sent();
+                        if ("content" in resp)
+                            return [2 /*return*/, resp.content];
+                        else {
+                            output = resp.output;
+                            return [2 /*return*/, (typeof output === "string") ? output : output.join("\n")];
+                        }
+                        return [3 /*break*/, 3];
                     case 2:
-                        _a = _b.sent();
-                        output = _a.output;
-                        throw new Error(output.join("\n"));
+                        errorResp_1 = _a.sent();
+                        if ("output" in errorResp_1)
+                            return [2 /*return*/, errorResp_1.output.join("\n")];
+                        throw errorResp_1;
                     case 3: return [2 /*return*/];
                 }
             });
@@ -251,25 +257,12 @@ var Ami = (function () {
             });
         });
     };
-    //Only Asterisk 14+
     Ami.prototype.removeContext = function (context) {
         return __awaiter(this, void 0, void 0, function () {
-            var cliCommand, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        cliCommand = "dialplan remove context " + context;
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.runCliCommand(cliCommand)];
-                    case 2:
-                        _a.sent();
-                        return [2 /*return*/, true];
-                    case 3:
-                        error_2 = _a.sent();
-                        return [2 /*return*/, false];
-                    case 4: return [2 /*return*/];
+                    case 0: return [4 /*yield*/, this.runCliCommand("dialplan remove context " + context)];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });

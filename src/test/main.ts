@@ -2,7 +2,6 @@ require("rejection-tracker").main(__dirname, "..", "..");
 
 import { Ami } from "../lib";
 
-
 (async function testSetGetVariable() {
 
     let ami= Ami.localhost();
@@ -15,9 +14,7 @@ import { Ami } from "../lib";
 
     console.log("PASS");
 
-
 });
-
 
 (async function testRunCliCommand() {
 
@@ -46,10 +43,7 @@ import { Ami } from "../lib";
 
     console.log("PASS");
 
-
-
 });
-
 
 (async function testDialplanManipulation() {
 
@@ -61,10 +55,17 @@ import { Ami } from "../lib";
     await ami.dialplanExtensionAdd(context, extension, 1, "NoOp", "What ever 1");
     await ami.dialplanExtensionAdd(context, extension, "hint", "Custom:alice");
 
+    console.log(await ami.runCliCommand(`dialplan show ${context}`));
+
     await ami.dialplanExtensionRemove(context, extension, "hint");
 
+    console.log(await ami.runCliCommand(`dialplan show ${context}`));
+
+    console.log(await ami.removeContext(context));
+    console.log(await ami.removeContext(context));
+
+    console.log(await ami.runCliCommand(`dialplan show ${context}`));
+
     console.log("PASS");
-
-
 
 })();
