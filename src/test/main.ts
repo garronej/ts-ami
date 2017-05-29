@@ -68,4 +68,26 @@ import { Ami } from "../lib";
 
     console.log("PASS");
 
-})();
+});
+
+(async function testVariable() {
+
+    let ami= Ami.localhost();
+
+    ami.evt.attach(({ event })=> event === "Newchannel", evt => {
+
+        console.log({ evt });
+
+    });
+
+
+    ami.originateLocalChannel("from-dongle", "init-reassembled-sms", { "hello": "world", "foo": "bar" });
+
+
+    //await ami.messageSend("foo", "bar", "coucou", {"first": "foo", "second": "bar" });
+    //await ami.messageSend("foo", "bar", "coucou", ["foo", "bar" ] as any);
+
+
+
+});
+

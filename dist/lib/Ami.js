@@ -93,33 +93,14 @@ var Ami = (function () {
     Ami.prototype.postAction = function (action) {
         var _this = this;
         return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var line, _a, _b, key, variable, _c, _d, variableKey, e_1, _e, e_2, _f;
-            return __generator(this, function (_g) {
-                switch (_g.label) {
+            var line, _a, _b, key, e_1, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         try {
                             for (_a = __values(Object.keys(action)), _b = _a.next(); !_b.done; _b = _a.next()) {
                                 key = _b.value;
-                                if (key === "variable" && typeof (action.variable) === "object") {
-                                    variable = action.variable;
-                                    line = "Variable: ";
-                                    try {
-                                        for (_c = __values(Object.keys(variable)), _d = _c.next(); !_d.done; _d = _c.next()) {
-                                            variableKey = _d.value;
-                                            line += variableKey + "=" + variable[variableKey] + ",";
-                                        }
-                                    }
-                                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                                    finally {
-                                        try {
-                                            if (_d && !_d.done && (_f = _c.return)) _f.call(_c);
-                                        }
-                                        finally { if (e_2) throw e_2.error; }
-                                    }
-                                    line = line.slice(0, -1) + "\r\n";
-                                }
-                                else
-                                    line = key + ": " + action[key] + "\r\n";
+                                line = key + ": " + action[key] + "\r\n";
                                 if (Buffer.byteLength(line) > exports.lineMaxByteLength)
                                     throw new Error("Line too long: " + line);
                             }
@@ -127,7 +108,7 @@ var Ami = (function () {
                         catch (e_1_1) { e_1 = { error: e_1_1 }; }
                         finally {
                             try {
-                                if (_b && !_b.done && (_e = _a.return)) _e.call(_a);
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                             }
                             finally { if (e_1) throw e_1.error; }
                         }
@@ -137,8 +118,8 @@ var Ami = (function () {
                         if (!!this.isFullyBooted) return [3 /*break*/, 2];
                         return [4 /*yield*/, pr.generic(this.ami, this.ami.once)("fullybooted")];
                     case 1:
-                        _g.sent();
-                        _g.label = 2;
+                        _d.sent();
+                        _d.label = 2;
                     case 2:
                         this.ami.action(action, function (error, res) { return error ? reject(error) : resolve(res); });
                         return [2 /*return*/];
@@ -267,16 +248,21 @@ var Ami = (function () {
             });
         });
     };
-    Ami.prototype.originateLocalChannel = function (context, extension) {
+    Ami.prototype.originateLocalChannel = function (context, extension, variable) {
         return __awaiter(this, void 0, void 0, function () {
+            var action;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.postAction({
+                    case 0:
+                        variable = variable || {};
+                        action = {
                             "action": "originate",
                             "channel": "Local/" + extension + "@" + context,
                             "application": "Wait",
-                            "data": "2000"
-                        })];
+                            "data": "2000",
+                            variable: variable
+                        };
+                        return [4 /*yield*/, this.postAction(action)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];

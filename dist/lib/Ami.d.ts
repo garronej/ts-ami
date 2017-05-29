@@ -34,6 +34,8 @@ export declare class Ami {
     runCliCommand(cliCommand: string): Promise<string>;
     dialplanExtensionRemove(context: string, extension: string, priority?: number | string): Promise<boolean>;
     removeContext(context: string): Promise<string>;
-    originateLocalChannel(context: string, extension: string): Promise<void>;
+    originateLocalChannel(context: string, extension: string, variable?: {
+        [key: string]: string;
+    }): Promise<void>;
     disconnect(): void;
 }

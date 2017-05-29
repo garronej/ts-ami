@@ -72,19 +72,7 @@ export class Ami {
 
             for (let key of Object.keys(action)) {
 
-                if (key === "variable" && typeof(action.variable) === "object" ) {
-
-                    let variable = action.variable;
-
-                    line = `Variable: `;
-
-                    for (let variableKey of Object.keys(variable))
-                        line += `${variableKey}=${variable[variableKey]},`;
-
-                    line = line.slice(0, -1) + "\r\n";
-
-                } else line = `${key}: ${action[key]}\r\n`;
-
+                line = `${key}: ${action[key]}\r\n`;
 
                 if (Buffer.byteLength(line) > lineMaxByteLength)
                     throw new Error(`Line too long: ${line}`);
@@ -241,15 +229,21 @@ export class Ami {
 
     public async originateLocalChannel(
         context: string,
-        extension: string
+        extension: string,
+        variable?: { [key: string]: string; }
     ) {
 
-        await this.postAction({
+        variable= variable || {};
+
+        let action = {
             "action": "originate",
             "channel": `Local/${extension}@${context}`,
             "application": "Wait",
-            "data": "2000"
-        });
+            "data": "2000",
+            variable
+        };
+
+        await this.postAction(action);
 
     }
 
