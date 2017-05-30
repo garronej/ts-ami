@@ -47,6 +47,7 @@ export class Ami {
     public readonly connection: any;
 
     public readonly evt = new SyncEvent<ManagerEvent>();
+    public readonly evtUserEvent= new SyncEvent<UserEvent>();
 
     private isFullyBooted = false;
 
@@ -61,6 +62,7 @@ export class Ami {
         this.connection.keepConnected();
 
         this.connection.on("managerevent", evt => this.evt.post(evt));
+        this.connection.on("userevent", evt => this.evtUserEvent.post(evt));
         this.connection.on("fullybooted", () => { this.isFullyBooted = true; });
         this.connection.on("close", () => { this.isFullyBooted = false; });
 

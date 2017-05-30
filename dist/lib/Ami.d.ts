@@ -22,6 +22,7 @@ export declare class Ami {
     }): Ami;
     readonly connection: any;
     readonly evt: SyncEvent<ManagerEvent>;
+    readonly evtUserEvent: SyncEvent<UserEvent>;
     private isFullyBooted;
     constructor(credential: Credential);
     lastActionId: string;

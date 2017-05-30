@@ -68,6 +68,7 @@ var Ami = (function () {
         var _this = this;
         this.credential = credential;
         this.evt = new ts_events_extended_1.SyncEvent();
+        this.evtUserEvent = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
         this.lastActionId = "";
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
@@ -75,6 +76,7 @@ var Ami = (function () {
         this.connection.setMaxListeners(Infinity);
         this.connection.keepConnected();
         this.connection.on("managerevent", function (evt) { return _this.evt.post(evt); });
+        this.connection.on("userevent", function (evt) { return _this.evtUserEvent.post(evt); });
         this.connection.on("fullybooted", function () { _this.isFullyBooted = true; });
         this.connection.on("close", function () { _this.isFullyBooted = false; });
     }
