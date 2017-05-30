@@ -56,8 +56,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var credential_1 = require("./credential");
 var AstMan = require("asterisk-manager");
 var ts_events_extended_1 = require("ts-events-extended");
-var pr = require("ts-promisify");
 var js_base64_1 = require("js-base64");
+var textSplit_1 = require("./textSplit");
 exports.lineMaxByteLength = 1024;
 exports.generateUniqueActionId = (function () {
     var counter = Date.now();
@@ -70,13 +70,6 @@ var Ami = (function () {
         this.evt = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
         this.lastActionId = "";
-        this.messageSend = function (to, from, body, headers) { return _this.postAction({
-            "action": "MessageSend",
-            to: to,
-            from: from,
-            "variable": headers || {},
-            "base64body": js_base64_1.Base64.encode(body)
-        }); };
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
         this.connection = new AstMan(port, host, user, secret, true);
         this.connection.setMaxListeners(Infinity);
@@ -91,19 +84,18 @@ var Ami = (function () {
         return this.localhostInstance = new this(credential_1.retrieveCredential(params));
     };
     ;
-    Ami.prototype.postAction = function (action) {
-        var _this = this;
-        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var line, _a, _b, key, e_1, _c;
+    Ami.prototype.userEvent = function (userEvent) {
+        return __awaiter(this, void 0, void 0, function () {
+            var action, _a, _b, key, e_1, _c;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
+                        action = __assign({}, userEvent);
                         try {
                             for (_a = __values(Object.keys(action)), _b = _a.next(); !_b.done; _b = _a.next()) {
                                 key = _b.value;
-                                line = key + ": " + action[key] + "\r\n";
-                                if (Buffer.byteLength(line) > exports.lineMaxByteLength)
-                                    throw new Error("Line too long: " + line);
+                                if (action[key] === undefined)
+                                    delete action[key];
                             }
                         }
                         catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -113,31 +105,86 @@ var Ami = (function () {
                             }
                             finally { if (e_1) throw e_1.error; }
                         }
-                        if (!action.actionid)
-                            action.actionid = exports.generateUniqueActionId();
-                        this.lastActionId = action.actionid;
-                        if (!!this.isFullyBooted) return [3 /*break*/, 2];
-                        return [4 /*yield*/, pr.generic(this.connection, this.connection.once)("fullybooted")];
+                        return [4 /*yield*/, this.postAction("UserEvent", action)];
                     case 1:
                         _d.sent();
-                        _d.label = 2;
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ;
+    Ami.checkHeadersLength = function (headers) {
+        var check = function (text, key) {
+            if (textSplit_1.textSplit(text, function (str) { return str; }, key).length !== 1)
+                throw new Error("Line too long");
+        };
+        try {
+            for (var _a = __values(Object.keys(headers)), _b = _a.next(); !_b.done; _b = _a.next()) {
+                var key = _b.value;
+                var value = headers[key];
+                if (typeof value === "string")
+                    check(value, key);
+                else if (value instanceof Array)
+                    check(value.join(","), key);
+                else
+                    this.checkHeadersLength(value);
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        var e_2, _c;
+    };
+    Ami.prototype.postAction = function (action, headers) {
+        var _this = this;
+        Ami.checkHeadersLength(headers);
+        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!headers.actionid)
+                            headers.actionid = exports.generateUniqueActionId();
+                        this.lastActionId = headers.actionid;
+                        if (!!this.isFullyBooted) return [3 /*break*/, 2];
+                        return [4 /*yield*/, new Promise(function (resolve) { return _this.connection.once("fullybooted", function () { return resolve(); }); })];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
                     case 2:
-                        this.connection.action(action, function (error, res) { return error ? reject(error) : resolve(res); });
+                        this.connection.action(__assign({}, headers, { action: action }), function (error, res) { return error ? reject(error) : resolve(res); });
                         return [2 /*return*/];
                 }
             });
         }); });
     };
+    Ami.prototype.messageSend = function (to, from, body, packetHeaders) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.postAction("MessageSend", { to: to, from: from, "variable": packetHeaders || {}, "base64body": js_base64_1.Base64.encode(body) })];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
     Ami.prototype.setVar = function (variable, value, channel) {
         return __awaiter(this, void 0, void 0, function () {
-            var action;
+            var headers;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        action = { "action": "SetVar", variable: variable, value: value };
+                        headers = { variable: variable, value: value };
                         if (channel)
-                            action = __assign({}, action, { channel: channel });
-                        return [4 /*yield*/, this.postAction(action)];
+                            headers = __assign({}, headers, { channel: channel });
+                        return [4 /*yield*/, this.postAction("SetVar", headers)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -147,14 +194,14 @@ var Ami = (function () {
     };
     Ami.prototype.getVar = function (variable, channel) {
         return __awaiter(this, void 0, void 0, function () {
-            var action;
+            var headers;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        action = { "action": "GetVar", variable: variable };
+                        headers = { variable: variable };
                         if (channel)
-                            action = __assign({}, action, { channel: channel });
-                        return [4 /*yield*/, this.postAction(action)];
+                            headers = __assign({}, headers, { channel: channel });
+                        return [4 /*yield*/, this.postAction("GetVar", headers)];
                     case 1: return [2 /*return*/, (_a.sent()).value];
                 }
             });
@@ -162,22 +209,21 @@ var Ami = (function () {
     };
     Ami.prototype.dialplanExtensionAdd = function (context, extension, priority, application, applicationData, replace) {
         return __awaiter(this, void 0, void 0, function () {
-            var action, res;
+            var headers, res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        action = {
-                            "action": "DialplanExtensionAdd",
+                        headers = {
                             extension: extension,
                             "priority": "" + priority,
                             context: context,
                             application: application
                         };
                         if (applicationData)
-                            action["applicationdata"] = applicationData;
+                            headers["applicationdata"] = applicationData;
                         if (replace !== false)
-                            action["replace"] = "" + true;
-                        return [4 /*yield*/, this.postAction(action)];
+                            headers["replace"] = "" + true;
+                        return [4 /*yield*/, this.postAction("DialplanExtensionAdd", headers)];
                     case 1:
                         res = _a.sent();
                         return [2 /*return*/];
@@ -192,10 +238,7 @@ var Ami = (function () {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, this.postAction({
-                                "action": "Command",
-                                "Command": cliCommand
-                            })];
+                        return [4 /*yield*/, this.postAction("Command", { "Command": cliCommand })];
                     case 1:
                         resp = _a.sent();
                         if ("content" in resp)
@@ -217,17 +260,17 @@ var Ami = (function () {
     };
     Ami.prototype.dialplanExtensionRemove = function (context, extension, priority) {
         return __awaiter(this, void 0, void 0, function () {
-            var action, error_1;
+            var headers, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        action = { "action": "DialplanExtensionRemove", context: context, extension: extension };
+                        headers = { context: context, extension: extension };
                         if (priority !== undefined)
-                            action = __assign({}, action, { "priority": "" + priority });
+                            headers = __assign({}, headers, { "priority": "" + priority });
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.postAction(action)];
+                        return [4 /*yield*/, this.postAction("DialplanExtensionRemove", headers)];
                     case 2:
                         _a.sent();
                         return [2 /*return*/, true];
@@ -249,25 +292,24 @@ var Ami = (function () {
             });
         });
     };
-    Ami.prototype.originateLocalChannel = function (context, extension, variable) {
+    Ami.prototype.originateLocalChannel = function (context, extension, channelVariables) {
         return __awaiter(this, void 0, void 0, function () {
-            var action, newInstance, answered, error_2;
+            var headers, newInstance, answered, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        variable = variable || {};
-                        action = {
-                            "action": "originate",
+                        channelVariables = channelVariables || {};
+                        headers = {
                             "channel": "Local/" + extension + "@" + context,
                             "application": "Wait",
                             "data": "2000",
-                            variable: variable
+                            "variable": channelVariables
                         };
                         newInstance = new Ami(this.credential);
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, newInstance.postAction(action)];
+                        return [4 /*yield*/, newInstance.postAction("originate", headers)];
                     case 2:
                         _a.sent();
                         answered = true;

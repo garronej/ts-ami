@@ -1,8 +1,9 @@
 import { retrieveCredential, Credential } from "./credential";
 import * as AstMan from "asterisk-manager";
 import { SyncEvent } from "ts-events-extended";
-import * as pr from "ts-promisify";
 import { Base64 } from "js-base64";
+import { textSplit } from "./textSplit";
+
 
 export interface ManagerEvent {
     event: string;
@@ -10,9 +11,17 @@ export interface ManagerEvent {
     [header: string]: string;
 }
 
+export interface UserEvent {
+    userevent: string;
+    actionid: string;
+    [key: string]: string | undefined;
+}
+
+export type Headers= Record<string, string | Record<string, string> | string[]>;
+
 export const lineMaxByteLength= 1024;
 
-export const generateUniqueActionId = (() => {
+export const generateUniqueActionId: ()=> string = (() => {
 
     let counter = Date.now();
 
@@ -60,35 +69,62 @@ export class Ami {
 
     public lastActionId: string = "";
 
-    public postAction(action: {
-        action: string;
-        variable?: string | { [key: string]: string };
-        [key: string]: any;
-    }): Promise<any> {
+    public async userEvent(userEvent: UserEvent) {
 
-        return new Promise<void>(async (resolve, reject) => {
+        let action: any = { ...userEvent };
 
-            let line: string;
+        for (let key of Object.keys(action))
+            if (action[key] === undefined)
+                delete action[key];
 
-            for (let key of Object.keys(action)) {
+        await this.postAction("UserEvent", action);
 
-                line = `${key}: ${action[key]}\r\n`;
+    };
 
-                if (Buffer.byteLength(line) > lineMaxByteLength)
-                    throw new Error(`Line too long: ${line}`);
 
-            }
+    private static checkHeadersLength( headers: Headers): void {
 
-            if (!action.actionid)
-                action.actionid = generateUniqueActionId();
+        let check = (text: string, key: string) => {
+            if (textSplit(text, str => str, key).length !== 1)
+                throw new Error("Line too long");
+        };
 
-            this.lastActionId = action.actionid;
+        for (let key of Object.keys(headers)) {
+
+            let value = headers[key];
+
+            if (typeof value === "string")
+                check(value, key);
+            else if (value instanceof Array)
+                check(value.join(","), key);
+            else
+                this.checkHeadersLength(value);
+
+        }
+
+    }
+
+    public postAction(
+        action: string,
+        headers: Headers
+    ): Promise<any> {
+
+        Ami.checkHeadersLength(headers);
+
+        return new Promise<any>(async (resolve, reject) => {
+
+            if (!headers.actionid)
+                headers.actionid = generateUniqueActionId();
+
+            this.lastActionId = headers.actionid as string;
 
             if (!this.isFullyBooted)
-                await pr.generic(this.connection, this.connection.once)("fullybooted");
+                await new Promise<void>(
+                    resolve => this.connection.once("fullybooted", () => resolve())
+                );
 
             this.connection.action(
-                action,
+                { ...headers, action },
                 (error, res) => error ? reject(error) : resolve(res)
             );
 
@@ -96,30 +132,33 @@ export class Ami {
 
     }
 
-    public readonly messageSend = (
+    public async messageSend(
         to: string,
         from: string,
         body: string,
-        headers?: { [header: string]: string; }
-    ) => this.postAction({
-        "action": "MessageSend",
-        to,
-        from,
-        "variable": headers || {},
-        "base64body": Base64.encode(body)
-    });
+        packetHeaders?: Record<string, string>
+    ) {
+
+        await this.postAction(
+            "MessageSend",
+            { to, from, "variable": packetHeaders || {}, "base64body": Base64.encode(body) }
+        );
+
+    }
+
+
 
     public async setVar(
         variable: string,
         value: string,
         channel?: string
-    ){
+    ) {
 
-        let action = { "action": "SetVar", variable, value };
+        let headers = { variable, value };
 
-        if( channel ) action= { ...action, channel };
+        if (channel) headers = { ...headers, channel };
 
-        await this.postAction(action);
+        await this.postAction("SetVar", headers);
 
     }
 
@@ -128,11 +167,11 @@ export class Ami {
         channel?: string
     ): Promise<string> {
 
-        let action= { "action": "GetVar", variable };
+        let headers = { variable };
 
-        if( channel ) action= { ...action, channel };
+        if (channel) headers = { ...headers, channel };
 
-        return (await this.postAction(action)).value;
+        return (await this.postAction("GetVar",headers)).value;
 
     }
 
@@ -148,19 +187,18 @@ export class Ami {
         replace?: boolean
     ) {
 
-        let action = {
-            "action": "DialplanExtensionAdd",
+        let headers = {
             extension,
             "priority": `${priority}`,
             context,
             application
         };
 
-        if (applicationData) action["applicationdata"] = applicationData;
+        if (applicationData) headers["applicationdata"] = applicationData;
 
-        if (replace !== false ) action["replace"] = `${true}`;
+        if (replace !== false) headers["replace"] = `${true}`;
 
-        let res= await this.postAction(action);
+        let res = await this.postAction("DialplanExtensionAdd", headers);
 
 
     }
@@ -169,24 +207,21 @@ export class Ami {
 
         try {
 
-            let resp = await this.postAction({
-                "action": "Command",
-                "Command": cliCommand
-            });
+            let resp = await this.postAction("Command", { "Command": cliCommand });
 
-            if( "content" in resp ) return resp.content;
-            else{
+            if ("content" in resp) return resp.content;
+            else {
 
                 let { output } = resp;
 
-                return (typeof output === "string" )?output:output.join("\n");
+                return (typeof output === "string") ? output : output.join("\n");
 
             }
 
 
         } catch (errorResp) {
 
-            if( "output" in errorResp ) return errorResp.output.join("\n");
+            if ("output" in errorResp) return errorResp.output.join("\n");
 
             throw errorResp;
 
@@ -201,13 +236,13 @@ export class Ami {
     ): Promise<boolean> {
 
 
-        let action = { "action": "DialplanExtensionRemove", context, extension };
+        let headers = { context, extension };
 
-        if (priority !== undefined) action = { ...action, "priority": `${priority}` };
+        if (priority !== undefined) headers = { ...headers, "priority": `${priority}` };
 
         try {
 
-            await this.postAction(action);
+            await this.postAction("DialplanExtensionRemove", headers);
 
             return true;
 
@@ -221,26 +256,23 @@ export class Ami {
 
     public async removeContext(context: string): Promise<string> {
 
-        return await this.runCliCommand(
-            `dialplan remove context ${context}`
-        );
+        return await this.runCliCommand(`dialplan remove context ${context}`);
 
     }
 
     public async originateLocalChannel(
         context: string,
         extension: string,
-        variable?: { [key: string]: string; }
+        channelVariables?: Record<string, string>
     ): Promise<boolean> {
 
-        variable= variable || {};
+        channelVariables = channelVariables || {};
 
-        let action = {
-            "action": "originate",
+        let headers = {
             "channel": `Local/${extension}@${context}`,
             "application": "Wait",
             "data": "2000",
-            variable
+            "variable": channelVariables
         };
 
         let newInstance = new Ami(this.credential);
@@ -249,18 +281,18 @@ export class Ami {
 
         try {
 
-            await newInstance.postAction(action);
+            await newInstance.postAction("originate", headers);
 
-            answered= true;
+            answered = true;
 
         } catch (error) {
 
-            answered= false;
+            answered = false;
 
         }
 
         await newInstance.disconnect();
-        
+
         return answered;
 
     }
