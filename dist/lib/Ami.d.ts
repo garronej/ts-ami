@@ -8,12 +8,13 @@ export interface ManagerEvent {
 export declare const lineMaxByteLength = 1024;
 export declare const generateUniqueActionId: () => string;
 export declare class Ami {
-    private static localClient;
+    readonly credential: Credential;
+    private static localhostInstance;
     static localhost(params?: {
         astConfPath?: string;
         user?: string;
     }): Ami;
-    readonly ami: any;
+    readonly connection: any;
     readonly evt: SyncEvent<ManagerEvent>;
     private isFullyBooted;
     constructor(credential: Credential);
@@ -36,6 +37,6 @@ export declare class Ami {
     removeContext(context: string): Promise<string>;
     originateLocalChannel(context: string, extension: string, variable?: {
         [key: string]: string;
-    }): Promise<void>;
-    disconnect(): void;
+    }): Promise<boolean>;
+    disconnect(): Promise<void>;
 }

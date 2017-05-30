@@ -22,38 +22,38 @@ export const generateUniqueActionId = (() => {
 
 export class Ami {
 
-    private static localClient: Ami | undefined = undefined;
+    private static localhostInstance: Ami | undefined = undefined;
 
     public static localhost(params?: {
         astConfPath?: string;
         user?: string;
     }): Ami {
 
-        if (this.localClient) return this.localClient;
+        if (this.localhostInstance) return this.localhostInstance;
 
-        return this.localClient = new this(retrieveCredential(params));
+        return this.localhostInstance = new this(retrieveCredential(params));
 
     };
 
-    public readonly ami: any;
+    public readonly connection: any;
 
     public readonly evt = new SyncEvent<ManagerEvent>();
 
     private isFullyBooted = false;
 
-    constructor(credential: Credential) {
+    constructor(public readonly credential: Credential) {
 
         let { port, host, user, secret } = credential;
 
-        this.ami = new AstMan(port, host, user, secret, true);
+        this.connection = new AstMan(port, host, user, secret, true);
 
-        this.ami.setMaxListeners(Infinity);
+        this.connection.setMaxListeners(Infinity);
 
-        this.ami.keepConnected();
+        this.connection.keepConnected();
 
-        this.ami.on("managerevent", evt => this.evt.post(evt));
-        this.ami.on("fullybooted", () => { this.isFullyBooted = true; });
-        this.ami.on("close", () => { this.isFullyBooted = false; });
+        this.connection.on("managerevent", evt => this.evt.post(evt));
+        this.connection.on("fullybooted", () => { this.isFullyBooted = true; });
+        this.connection.on("close", () => { this.isFullyBooted = false; });
 
     }
 
@@ -85,9 +85,9 @@ export class Ami {
             this.lastActionId = action.actionid;
 
             if (!this.isFullyBooted)
-                await pr.generic(this.ami, this.ami.once)("fullybooted");
+                await pr.generic(this.connection, this.connection.once)("fullybooted");
 
-            this.ami.action(
+            this.connection.action(
                 action,
                 (error, res) => error ? reject(error) : resolve(res)
             );
@@ -231,7 +231,7 @@ export class Ami {
         context: string,
         extension: string,
         variable?: { [key: string]: string; }
-    ) {
+    ): Promise<boolean> {
 
         variable= variable || {};
 
@@ -243,13 +243,37 @@ export class Ami {
             variable
         };
 
-        await this.postAction(action);
+        let newInstance = new Ami(this.credential);
+
+        let answered: boolean;
+
+        try {
+
+            await newInstance.postAction(action);
+
+            answered= true;
+
+        } catch (error) {
+
+            answered= false;
+
+        }
+
+        await newInstance.disconnect();
+        
+        return answered;
 
     }
 
 
-    public disconnect(): void {
-        this.ami.disconnect();
+    public disconnect(): Promise<void> {
+
+        return new Promise<void>(
+            resolve => this.connection.disconnect(
+                () => resolve()
+            )
+        );
+
     }
 
 }

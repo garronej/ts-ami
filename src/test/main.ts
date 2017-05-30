@@ -91,3 +91,48 @@ import { Ami } from "../lib";
 
 });
 
+(async function testOriginate() {
+
+    let ami = Ami.localhost();
+
+    let context = "foo-context";
+    let extension = "bar-extension";
+
+    let value= "BAR_VALUE";
+
+
+    ami.evt.attach(
+        evt => (
+            evt.event === "Newexten" &&
+            evt.context === context &&
+            evt.exten === extension &&
+            evt.application === "NoOp"
+        ),
+        ({ appdata }) => {
+
+            console.log({ appdata });            
+            console.assert( appdata === value );
+
+            ami.disconnect();
+
+        }
+    );
+
+    await ami.removeContext(context);
+
+    let priority= 1;
+    await ami.dialplanExtensionAdd(context, extension, priority++, "NoOp", "${FOO_VARIABLE}");
+    await ami.dialplanExtensionAdd(context, extension, priority++, "Wait", "3");
+    await ami.dialplanExtensionAdd(context, extension, priority++, "Answer");
+
+    let answered= await ami.originateLocalChannel(context, extension, { "FOO_VARIABLE": value });
+
+    console.log({ answered });
+
+    console.assert( answered === true );
+
+    console.log("PASS");
+
+
+})();
+

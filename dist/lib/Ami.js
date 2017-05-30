@@ -66,6 +66,7 @@ exports.generateUniqueActionId = (function () {
 var Ami = (function () {
     function Ami(credential) {
         var _this = this;
+        this.credential = credential;
         this.evt = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
         this.lastActionId = "";
@@ -77,17 +78,17 @@ var Ami = (function () {
             "base64body": js_base64_1.Base64.encode(body)
         }); };
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
-        this.ami = new AstMan(port, host, user, secret, true);
-        this.ami.setMaxListeners(Infinity);
-        this.ami.keepConnected();
-        this.ami.on("managerevent", function (evt) { return _this.evt.post(evt); });
-        this.ami.on("fullybooted", function () { _this.isFullyBooted = true; });
-        this.ami.on("close", function () { _this.isFullyBooted = false; });
+        this.connection = new AstMan(port, host, user, secret, true);
+        this.connection.setMaxListeners(Infinity);
+        this.connection.keepConnected();
+        this.connection.on("managerevent", function (evt) { return _this.evt.post(evt); });
+        this.connection.on("fullybooted", function () { _this.isFullyBooted = true; });
+        this.connection.on("close", function () { _this.isFullyBooted = false; });
     }
     Ami.localhost = function (params) {
-        if (this.localClient)
-            return this.localClient;
-        return this.localClient = new this(credential_1.retrieveCredential(params));
+        if (this.localhostInstance)
+            return this.localhostInstance;
+        return this.localhostInstance = new this(credential_1.retrieveCredential(params));
     };
     ;
     Ami.prototype.postAction = function (action) {
@@ -116,12 +117,12 @@ var Ami = (function () {
                             action.actionid = exports.generateUniqueActionId();
                         this.lastActionId = action.actionid;
                         if (!!this.isFullyBooted) return [3 /*break*/, 2];
-                        return [4 /*yield*/, pr.generic(this.ami, this.ami.once)("fullybooted")];
+                        return [4 /*yield*/, pr.generic(this.connection, this.connection.once)("fullybooted")];
                     case 1:
                         _d.sent();
                         _d.label = 2;
                     case 2:
-                        this.ami.action(action, function (error, res) { return error ? reject(error) : resolve(res); });
+                        this.connection.action(action, function (error, res) { return error ? reject(error) : resolve(res); });
                         return [2 /*return*/];
                 }
             });
@@ -250,7 +251,7 @@ var Ami = (function () {
     };
     Ami.prototype.originateLocalChannel = function (context, extension, variable) {
         return __awaiter(this, void 0, void 0, function () {
-            var action;
+            var action, newInstance, answered, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -262,19 +263,33 @@ var Ami = (function () {
                             "data": "2000",
                             variable: variable
                         };
-                        return [4 /*yield*/, this.postAction(action)];
+                        newInstance = new Ami(this.credential);
+                        _a.label = 1;
                     case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, newInstance.postAction(action)];
+                    case 2:
                         _a.sent();
-                        return [2 /*return*/];
+                        answered = true;
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_2 = _a.sent();
+                        answered = false;
+                        return [3 /*break*/, 4];
+                    case 4: return [4 /*yield*/, newInstance.disconnect()];
+                    case 5:
+                        _a.sent();
+                        return [2 /*return*/, answered];
                 }
             });
         });
     };
     Ami.prototype.disconnect = function () {
-        this.ami.disconnect();
+        var _this = this;
+        return new Promise(function (resolve) { return _this.connection.disconnect(function () { return resolve(); }); });
     };
     return Ami;
 }());
-Ami.localClient = undefined;
+Ami.localhostInstance = undefined;
 exports.Ami = Ami;
 //# sourceMappingURL=Ami.js.map
