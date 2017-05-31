@@ -17,19 +17,18 @@ export interface UserEvent {
     [key: string]: string | undefined;
 }
 
-export type Headers= Record<string, string | Record<string, string> | string[]>;
+export type Headers = Record<string, string | Record<string, string> | string[]>;
 
-export const lineMaxByteLength= 1024;
-
-export const generateUniqueActionId: ()=> string = (() => {
-
-    let counter = Date.now();
-
-    return (): string => (counter++).toString();
-
-})();
 
 export class Ami {
+
+    public static generateUniqueActionId: () => string = (() => {
+
+        let counter = Date.now();
+
+        return (): string => (counter++).toString();
+
+    })();
 
     private static localhostInstance: Ami | undefined = undefined;
 
@@ -47,7 +46,7 @@ export class Ami {
     public readonly connection: any;
 
     public readonly evt = new SyncEvent<ManagerEvent>();
-    public readonly evtUserEvent= new SyncEvent<UserEvent>();
+    public readonly evtUserEvent = new SyncEvent<UserEvent>();
 
     private isFullyBooted = false;
 
@@ -88,7 +87,7 @@ export class Ami {
     };
 
 
-    private static checkHeadersLength( headers: Headers): void {
+    private static checkHeadersLength(headers: Headers): void {
 
         let check = (text: string, key: string) => {
             if (textSplit(text, str => str, key).length !== 1)
@@ -120,7 +119,7 @@ export class Ami {
         return new Promise<any>(async (resolve, reject) => {
 
             if (!headers.actionid)
-                headers.actionid = generateUniqueActionId();
+                headers.actionid = Ami.generateUniqueActionId();
 
             this.lastActionId = headers.actionid as string;
 
@@ -177,7 +176,7 @@ export class Ami {
 
         if (channel) headers = { ...headers, channel };
 
-        return (await this.postAction("GetVar",headers)).value;
+        return (await this.postAction("GetVar", headers)).value;
 
     }
 

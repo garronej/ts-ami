@@ -16,8 +16,8 @@ var __read = (this && this.__read) || function (o, n) {
     return ar;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var Ami_1 = require("./Ami");
 var js_base64_1 = require("js-base64");
+var lineMaxByteLength = 1024;
 function splitStep(nByte, text, encodeFunction) {
     for (var index = 0; index < text.length; index++) {
         if (Buffer.byteLength(encodeFunction(text.substring(0, index + 1))) > nByte) {
@@ -44,7 +44,7 @@ function textSplitWithByteOffset(text, encodeFunction, maxBytePerPart, offsetByt
     return performSplit(maxBytePerPart, text, encodeFunction);
 }
 function textSplit(text, encodeFunction, key) {
-    return textSplitWithByteOffset(text, encodeFunction, Ami_1.lineMaxByteLength - 1, Buffer.byteLength(key + ": \r\n"));
+    return textSplitWithByteOffset(text, encodeFunction, lineMaxByteLength - 1, Buffer.byteLength(key + ": \r\n"));
 }
 exports.textSplit = textSplit;
 function base64TextSplit(text, key) {

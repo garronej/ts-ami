@@ -58,11 +58,6 @@ var AstMan = require("asterisk-manager");
 var ts_events_extended_1 = require("ts-events-extended");
 var js_base64_1 = require("js-base64");
 var textSplit_1 = require("./textSplit");
-exports.lineMaxByteLength = 1024;
-exports.generateUniqueActionId = (function () {
-    var counter = Date.now();
-    return function () { return (counter++).toString(); };
-})();
 var Ami = (function () {
     function Ami(credential) {
         var _this = this;
@@ -151,7 +146,7 @@ var Ami = (function () {
                 switch (_a.label) {
                     case 0:
                         if (!headers.actionid)
-                            headers.actionid = exports.generateUniqueActionId();
+                            headers.actionid = Ami.generateUniqueActionId();
                         this.lastActionId = headers.actionid;
                         if (!!this.isFullyBooted) return [3 /*break*/, 2];
                         return [4 /*yield*/, new Promise(function (resolve) { return _this.connection.once("fullybooted", function () { return resolve(); }); })];
@@ -334,6 +329,10 @@ var Ami = (function () {
     };
     return Ami;
 }());
+Ami.generateUniqueActionId = (function () {
+    var counter = Date.now();
+    return function () { return (counter++).toString(); };
+})();
 Ami.localhostInstance = undefined;
 exports.Ami = Ami;
 //# sourceMappingURL=Ami.js.map

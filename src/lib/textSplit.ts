@@ -1,6 +1,6 @@
-import { lineMaxByteLength } from "./Ami";
 import { Base64 } from "js-base64";
 
+const lineMaxByteLength= 1024;
 
 function splitStep(
     nByte: number,

@@ -11,10 +11,9 @@ export interface UserEvent {
     [key: string]: string | undefined;
 }
 export declare type Headers = Record<string, string | Record<string, string> | string[]>;
-export declare const lineMaxByteLength = 1024;
-export declare const generateUniqueActionId: () => string;
 export declare class Ami {
     readonly credential: Credential;
+    static generateUniqueActionId: () => string;
     private static localhostInstance;
     static localhost(params?: {
         astConfPath?: string;
