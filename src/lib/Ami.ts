@@ -71,7 +71,11 @@ export class Ami {
 
     public lastActionId: string = "";
 
-    public async userEvent(userEvent: UserEvent) {
+    public async userEvent(userEvent: {
+        userevent: UserEvent['userevent'],
+        actionid?: UserEvent['actionid'],
+        [key: string]: string | undefined
+    }) {
 
         let action: any = { ...userEvent };
 

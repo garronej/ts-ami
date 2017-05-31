@@ -26,7 +26,11 @@ export declare class Ami {
     private isFullyBooted;
     constructor(credential: Credential);
     lastActionId: string;
-    userEvent(userEvent: UserEvent): Promise<void>;
+    userEvent(userEvent: {
+        userevent: UserEvent['userevent'];
+        actionid?: UserEvent['actionid'];
+        [key: string]: string | undefined;
+    }): Promise<void>;
     private static checkHeadersLength(headers);
     postAction(action: string, headers: Headers): Promise<any>;
     messageSend(to: string, from: string, body: string, packetHeaders?: Record<string, string>): Promise<void>;
