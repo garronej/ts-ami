@@ -23,7 +23,6 @@
     "ini-extended": "garronej/ini-extended",
     "rejection-tracker": "garronej/rejection-tracker",
     "ts-events-extended": "garronej/ts-events-extended",
-    "ts-promisify": "garronej/ts-promisify",
     "js-base64": "^2.1.9"
   },
   "devDependencies": {
