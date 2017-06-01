@@ -1,6 +1,7 @@
 import { Base64 } from "js-base64";
 
 const lineMaxByteLength= 1024;
+const safeOffsetBytes= Buffer.byteLength("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n")
 
 function splitStep(
     nByte: number,
@@ -53,36 +54,33 @@ function textSplitWithByteOffset(
     text: string,
     encodeFunction: (str: string) => string,
     maxBytePerPart: number,
-    offsetByte?: number
+    offsetBytes?: number
 ): string[] {
 
-    if (typeof (offsetByte) === "number")
-        maxBytePerPart = maxBytePerPart - offsetByte;
+    if (typeof (offsetBytes) === "number")
+        maxBytePerPart = maxBytePerPart - offsetBytes;
 
     return performSplit(maxBytePerPart, text, encodeFunction);
 
 }
 
+
 export function textSplit(
     text: string,
-    encodeFunction: (str: string) => string,
-    key: string
+    encodeFunction: (str: string) => string
 ): string[] {
 
     return textSplitWithByteOffset(
         text,
         encodeFunction,
         lineMaxByteLength - 1,
-        Buffer.byteLength(`${key}: \r\n`)
+        safeOffsetBytes
     );
 
 }
 
-export function base64TextSplit(
-    text: string,
-    key: string
-): string[] {
+export function base64TextSplit( text: string ): string[] {
 
-    return textSplit( text, Base64.encode, key );
+    return textSplit( text, Base64.encode );
 
 }

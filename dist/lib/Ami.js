@@ -113,7 +113,7 @@ var Ami = (function () {
     ;
     Ami.checkHeadersLength = function (headers) {
         var check = function (text, key) {
-            if (textSplit_1.textSplit(text, function (str) { return str; }, key).length !== 1)
+            if (Ami.textSplit(text, function (str) { return str; }).length !== 1)
                 throw new Error("Line too long");
         };
         try {

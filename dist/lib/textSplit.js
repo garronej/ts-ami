@@ -18,6 +18,7 @@ var __read = (this && this.__read) || function (o, n) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var js_base64_1 = require("js-base64");
 var lineMaxByteLength = 1024;
+var safeOffsetBytes = Buffer.byteLength("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n");
 function splitStep(nByte, text, encodeFunction) {
     for (var index = 0; index < text.length; index++) {
         if (Buffer.byteLength(encodeFunction(text.substring(0, index + 1))) > nByte) {
@@ -38,17 +39,17 @@ function performSplit(maxByte, text, encodingFunction) {
     }
     return callee([], text);
 }
-function textSplitWithByteOffset(text, encodeFunction, maxBytePerPart, offsetByte) {
-    if (typeof (offsetByte) === "number")
-        maxBytePerPart = maxBytePerPart - offsetByte;
+function textSplitWithByteOffset(text, encodeFunction, maxBytePerPart, offsetBytes) {
+    if (typeof (offsetBytes) === "number")
+        maxBytePerPart = maxBytePerPart - offsetBytes;
     return performSplit(maxBytePerPart, text, encodeFunction);
 }
-function textSplit(text, encodeFunction, key) {
-    return textSplitWithByteOffset(text, encodeFunction, lineMaxByteLength - 1, Buffer.byteLength(key + ": \r\n"));
+function textSplit(text, encodeFunction) {
+    return textSplitWithByteOffset(text, encodeFunction, lineMaxByteLength - 1, safeOffsetBytes);
 }
 exports.textSplit = textSplit;
-function base64TextSplit(text, key) {
-    return textSplit(text, js_base64_1.Base64.encode, key);
+function base64TextSplit(text) {
+    return textSplit(text, js_base64_1.Base64.encode);
 }
 exports.base64TextSplit = base64TextSplit;
 //# sourceMappingURL=textSplit.js.map

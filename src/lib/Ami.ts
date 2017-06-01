@@ -97,7 +97,7 @@ export class Ami {
     private static checkHeadersLength(headers: Headers): void {
 
         let check = (text: string, key: string) => {
-            if (textSplit(text, str => str, key).length !== 1)
+            if (Ami.textSplit(text, str => str).length !== 1)
                 throw new Error("Line too long");
         };
 
