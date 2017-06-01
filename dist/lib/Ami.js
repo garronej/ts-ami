@@ -329,6 +329,8 @@ var Ami = (function () {
     };
     return Ami;
 }());
+Ami.textSplit = textSplit_1.textSplit;
+Ami.base64TextSplit = textSplit_1.base64TextSplit;
 Ami.generateUniqueActionId = (function () {
     var counter = Date.now();
     return function () { return (counter++).toString(); };

@@ -1,5 +1,6 @@
 import { Credential } from "./credential";
 import { SyncEvent } from "ts-events-extended";
+import { textSplit, base64TextSplit } from "./textSplit";
 export interface ManagerEvent {
     event: string;
     privilege: string;
@@ -13,6 +14,8 @@ export interface UserEvent {
 export declare type Headers = Record<string, string | Record<string, string> | string[]>;
 export declare class Ami {
     readonly credential: Credential;
+    static textSplit: typeof textSplit;
+    static base64TextSplit: typeof base64TextSplit;
     static generateUniqueActionId: () => string;
     private static localhostInstance;
     static localhost(params?: {

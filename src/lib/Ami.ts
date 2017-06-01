@@ -2,7 +2,8 @@ import { retrieveCredential, Credential } from "./credential";
 import * as AstMan from "asterisk-manager";
 import { SyncEvent } from "ts-events-extended";
 import { Base64 } from "js-base64";
-import { textSplit } from "./textSplit";
+import { textSplit, base64TextSplit } from "./textSplit";
+
 
 
 export interface ManagerEvent {
@@ -20,7 +21,13 @@ export interface UserEvent {
 export type Headers = Record<string, string | Record<string, string> | string[]>;
 
 
+
+
 export class Ami {
+
+    public static textSplit= textSplit;
+
+    public static base64TextSplit= base64TextSplit;
 
     public static generateUniqueActionId: () => string = (() => {
 
