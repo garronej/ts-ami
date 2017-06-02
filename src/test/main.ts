@@ -91,6 +91,16 @@ import { Ami } from "../lib";
 
 });
 
+
+(async function testEdgeCaseTextSplit() {
+
+    console.assert(JSON.stringify(Ami.base64TextSplit(""))==='[""]');
+
+    console.log("PASS");
+
+});
+
+
 (async function testOriginate() {
 
     let ami = Ami.localhost();
@@ -135,4 +145,3 @@ import { Ami } from "../lib";
 
 
 })();
-

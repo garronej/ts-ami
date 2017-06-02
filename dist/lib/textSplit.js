@@ -39,13 +39,16 @@ function performSplit(maxByte, text, encodingFunction) {
     }
     return callee([], text);
 }
-function textSplitWithByteOffset(text, encodeFunction, maxBytePerPart, offsetBytes) {
+function generalCaseTextSplit(text, encodeFunction, maxBytePerPart, offsetBytes) {
     if (typeof (offsetBytes) === "number")
         maxBytePerPart = maxBytePerPart - offsetBytes;
-    return performSplit(maxBytePerPart, text, encodeFunction);
+    var out = performSplit(maxBytePerPart, text, encodeFunction);
+    if (!out.length)
+        out.push("");
+    return out;
 }
 function textSplit(text, encodeFunction) {
-    return textSplitWithByteOffset(text, encodeFunction, lineMaxByteLength - 1, safeOffsetBytes);
+    return generalCaseTextSplit(text, encodeFunction, lineMaxByteLength - 1, safeOffsetBytes);
 }
 exports.textSplit = textSplit;
 function base64TextSplit(text) {

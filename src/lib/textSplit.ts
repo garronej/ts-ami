@@ -50,7 +50,7 @@ function performSplit(
 
 
 
-function textSplitWithByteOffset(
+function generalCaseTextSplit(
     text: string,
     encodeFunction: (str: string) => string,
     maxBytePerPart: number,
@@ -60,7 +60,11 @@ function textSplitWithByteOffset(
     if (typeof (offsetBytes) === "number")
         maxBytePerPart = maxBytePerPart - offsetBytes;
 
-    return performSplit(maxBytePerPart, text, encodeFunction);
+    let out= performSplit(maxBytePerPart, text, encodeFunction);
+
+    if( !out.length ) out.push("");
+
+    return out;
 
 }
 
@@ -70,7 +74,7 @@ export function textSplit(
     encodeFunction: (str: string) => string
 ): string[] {
 
-    return textSplitWithByteOffset(
+    return generalCaseTextSplit(
         text,
         encodeFunction,
         lineMaxByteLength - 1,
