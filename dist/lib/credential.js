@@ -92,4 +92,3 @@ function isGranted(list) {
 
     */
 }
-//# sourceMappingURL=credential.js.map

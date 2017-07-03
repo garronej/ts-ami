@@ -6,4 +6,3 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("rejection-tracker")(__dirname, "..", "..");
 __export(require("./Ami"));
 __export(require("./credential"));
-//# sourceMappingURL=index.js.map

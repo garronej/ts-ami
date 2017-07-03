@@ -56,7 +56,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var credential_1 = require("./credential");
 var AstMan = require("asterisk-manager");
 var ts_events_extended_1 = require("ts-events-extended");
-var js_base64_1 = require("js-base64");
 var textSplit_1 = require("./textSplit");
 var Ami = (function () {
     function Ami(credential) {
@@ -164,7 +163,7 @@ var Ami = (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.postAction("MessageSend", { to: to, from: from, "variable": packetHeaders || {}, "base64body": js_base64_1.Base64.encode(body) })];
+                    case 0: return [4 /*yield*/, this.postAction("MessageSend", { to: to, from: from, "variable": packetHeaders || {}, "base64body": (new Buffer(body, "utf8")).toString("base64") })];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -327,14 +326,13 @@ var Ami = (function () {
         var _this = this;
         return new Promise(function (resolve) { return _this.connection.disconnect(function () { return resolve(); }); });
     };
+    Ami.textSplit = textSplit_1.textSplit;
+    Ami.base64TextSplit = textSplit_1.base64TextSplit;
+    Ami.generateUniqueActionId = (function () {
+        var counter = Date.now();
+        return function () { return (counter++).toString(); };
+    })();
+    Ami.localhostInstance = undefined;
     return Ami;
 }());
-Ami.textSplit = textSplit_1.textSplit;
-Ami.base64TextSplit = textSplit_1.base64TextSplit;
-Ami.generateUniqueActionId = (function () {
-    var counter = Date.now();
-    return function () { return (counter++).toString(); };
-})();
-Ami.localhostInstance = undefined;
 exports.Ami = Ami;
-//# sourceMappingURL=Ami.js.map

@@ -1,6 +1,6 @@
 {
   "name": "ts-ami",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "AMI client",
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
@@ -19,16 +19,14 @@
   "author": "Joseph Garrone",
   "license": "MIT",
   "dependencies": {
-    "asterisk-manager": "garronej/NodeJS-AsteriskManager",
+    "asterisk-manager": "^0.1.16",
     "ini-extended": "garronej/ini-extended",
     "rejection-tracker": "garronej/rejection-tracker",
-    "ts-events-extended": "garronej/ts-events-extended",
-    "js-base64": "^2.1.9"
+    "ts-events-extended": "garronej/ts-events-extended"
   },
   "devDependencies": {
-    "@types/js-base64": "^2.1.5",
     "@types/node": "^4.2.2",
-    "typescript": "^2.3.2",
+    "typescript": "^2.4.1",
     "why-is-node-running": "^1.2.2"
   }
 }

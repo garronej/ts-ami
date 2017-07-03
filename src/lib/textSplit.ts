@@ -1,5 +1,3 @@
-import { Base64 } from "js-base64";
-
 const lineMaxByteLength= 1024;
 const safeOffsetBytes= Buffer.byteLength("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n")
 
@@ -83,8 +81,9 @@ export function textSplit(
 
 }
 
+
 export function base64TextSplit( text: string ): string[] {
 
-    return textSplit( text, Base64.encode );
+    return textSplit( text, str => (new Buffer(str, "utf8")).toString("base64") );
 
 }

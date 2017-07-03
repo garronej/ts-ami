@@ -1,7 +1,6 @@
 import { retrieveCredential, Credential } from "./credential";
 import * as AstMan from "asterisk-manager";
 import { SyncEvent } from "ts-events-extended";
-import { Base64 } from "js-base64";
 import { textSplit, base64TextSplit } from "./textSplit";
 
 
@@ -153,7 +152,7 @@ export class Ami {
 
         await this.postAction(
             "MessageSend",
-            { to, from, "variable": packetHeaders || {}, "base64body": Base64.encode(body) }
+            { to, from, "variable": packetHeaders || {}, "base64body": (new Buffer(body,"utf8")).toString("base64") }
         );
 
     }
@@ -166,7 +165,7 @@ export class Ami {
         channel?: string
     ) {
 
-        let headers = { variable, value };
+        let headers: Record<string,string>= { variable, value };
 
         if (channel) headers = { ...headers, channel };
 
@@ -179,7 +178,7 @@ export class Ami {
         channel?: string
     ): Promise<string> {
 
-        let headers = { variable };
+        let headers: Record<string,string> = { variable };
 
         if (channel) headers = { ...headers, channel };
 
@@ -248,7 +247,7 @@ export class Ami {
     ): Promise<boolean> {
 
 
-        let headers = { context, extension };
+        let headers: Record<string, string> = { context, extension };
 
         if (priority !== undefined) headers = { ...headers, "priority": `${priority}` };
 
