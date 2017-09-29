@@ -5,3 +5,4 @@ function __export(m) {
 Object.defineProperty(exports, "__esModule", { value: true });
 require("rejection-tracker")(__dirname, "..", "..");
 __export(require("./Ami"));
+__export(require("./Credential"));

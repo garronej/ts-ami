@@ -1,11 +1,11 @@
-import { getCredentialFromConfigFile } from "../lib/credential";
+import { Credential } from "../lib";
 import * as path from "path";
 
 try {
 
     let astConfPath = path.join(__dirname, "..", "..", "res", "no_file");
 
-    getCredentialFromConfigFile({ astConfPath });
+    Credential.getFromConfigFile({ astConfPath });
 
 } catch (error) {
     console.assert(error.message === "NO_FILE");
@@ -16,7 +16,7 @@ try {
 
     let astConfPath = path.join(__dirname, "..", "..", "res", "disabled");
 
-    getCredentialFromConfigFile({ astConfPath });
+    Credential.getFromConfigFile({ astConfPath });
 
 } catch (error) {
     console.assert(error.message === "NOT_ENABLED");
@@ -28,7 +28,7 @@ try {
 
     let astConfPath = path.join(__dirname, "..", "..", "res", "no_user");
 
-    getCredentialFromConfigFile({ astConfPath });
+    Credential.getFromConfigFile({ astConfPath });
 
 } catch (error) {
     console.assert(error.message === "NO_USER");
@@ -39,7 +39,7 @@ let astConfPath = path.join(__dirname, "..", "..", "res", "pass");
 
 
 
-let credential = getCredentialFromConfigFile({ astConfPath });
+let credential = Credential.getFromConfigFile({ astConfPath });
 
 console.assert(
     credential.port === 5038 &&
@@ -48,7 +48,7 @@ console.assert(
     credential.secret === "admin"
 );
 
-credential = getCredentialFromConfigFile({ astConfPath, "user": "my-user" });
+credential = Credential.getFromConfigFile({ astConfPath, "user": "my-user" });
 
 console.assert(
     credential.port === 5038 &&

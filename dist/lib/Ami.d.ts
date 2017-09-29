@@ -1,5 +1,5 @@
 import { SyncEvent } from "ts-events-extended";
-import { Credential, GetCredentialParams } from "./credential";
+import { Credential } from "./Credential";
 import { textSplit, base64TextSplit } from "./textSplit";
 export declare class Ami {
     readonly credential: Credential;
@@ -7,7 +7,7 @@ export declare class Ami {
     static base64TextSplit: typeof base64TextSplit;
     static generateUniqueActionId: () => string;
     private static localhostInstance;
-    static localhost(params?: GetCredentialParams): Ami;
+    static localhost(params?: Credential.Params): Ami;
     readonly connection: any;
     readonly evt: SyncEvent<Ami.ManagerEvent>;
     readonly evtUserEvent: SyncEvent<Ami.UserEvent>;

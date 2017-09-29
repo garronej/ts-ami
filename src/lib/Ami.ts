@@ -1,10 +1,6 @@
 import { SyncEvent } from "ts-events-extended";
 import * as AstMan from "asterisk-manager";
-import { 
-    Credential, 
-    getCredentialFromConfigFile, 
-    GetCredentialParams 
-} from "./credential";
+import { Credential, } from "./Credential";
 import { textSplit, base64TextSplit } from "./textSplit";
 
 export class Ami {
@@ -23,11 +19,11 @@ export class Ami {
 
     private static localhostInstance: Ami | undefined = undefined;
 
-    public static localhost(params?: GetCredentialParams): Ami {
+    public static localhost(params?: Credential.Params): Ami {
 
         if (this.localhostInstance) return this.localhostInstance;
 
-        return this.localhostInstance = new this(getCredentialFromConfigFile(params));
+        return this.localhostInstance = new this(Credential.getFromConfigFile(params));
 
     };
 
