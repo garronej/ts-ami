@@ -14,8 +14,7 @@ var ini_extended_1 = require("ini-extended");
 var fs_1 = require("fs");
 var path = require("path");
 var astConfPath = path.join("/etc", "asterisk");
-;
-function retrieveCredential(params) {
+function getCredentialFromConfigFile(params) {
     params || (params = {});
     var filePath = path.join(params.astConfPath || astConfPath, "manager.conf");
     if (!fs_1.existsSync(filePath))
@@ -59,7 +58,7 @@ function retrieveCredential(params) {
     throw Error("NO_USER");
     var e_1, _a;
 }
-exports.retrieveCredential = retrieveCredential;
+exports.getCredentialFromConfigFile = getCredentialFromConfigFile;
 function getListAuthority(strList) {
     strList = strList.replace(/\ /g, "");
     return strList.split(",");
@@ -67,28 +66,28 @@ function getListAuthority(strList) {
 function isGranted(list) {
     return true;
     /*
-
+ 
     let hasUser = false;
     let hasSystem = false;
     let hasConfig = false;
-
+ 
     for (let authority of list) {
-
+ 
         if (authority.toLowerCase() === "all")
             return true;
-
+ 
         if (authority.toLocaleLowerCase() === "user")
             hasUser = true;
-
+ 
         if (authority.toLocaleLowerCase() === "system")
             hasSystem = true;
-
+ 
         if (authority.toLocaleLowerCase() === "config")
             hasConfig = true;
-
+ 
     }
-
+ 
     return hasUser && (hasSystem || hasConfig);
-
+ 
     */
 }

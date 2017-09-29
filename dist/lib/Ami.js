@@ -53,9 +53,9 @@ var __values = (this && this.__values) || function (o) {
     };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var credential_1 = require("./credential");
-var AstMan = require("asterisk-manager");
 var ts_events_extended_1 = require("ts-events-extended");
+var AstMan = require("asterisk-manager");
+var credential_1 = require("./credential");
 var textSplit_1 = require("./textSplit");
 var Ami = (function () {
     function Ami(credential) {
@@ -77,7 +77,7 @@ var Ami = (function () {
     Ami.localhost = function (params) {
         if (this.localhostInstance)
             return this.localhostInstance;
-        return this.localhostInstance = new this(credential_1.retrieveCredential(params));
+        return this.localhostInstance = new this(credential_1.getCredentialFromConfigFile(params));
     };
     ;
     Ami.prototype.userEvent = function (userEvent) {

@@ -1,32 +1,17 @@
-import { retrieveCredential, Credential } from "./credential";
-import * as AstMan from "asterisk-manager";
 import { SyncEvent } from "ts-events-extended";
+import * as AstMan from "asterisk-manager";
+import { 
+    Credential, 
+    getCredentialFromConfigFile, 
+    GetCredentialParams 
+} from "./credential";
 import { textSplit, base64TextSplit } from "./textSplit";
-
-
-
-export interface ManagerEvent {
-    event: string;
-    privilege: string;
-    [header: string]: string;
-}
-
-export interface UserEvent {
-    userevent: string;
-    actionid: string;
-    [key: string]: string | undefined;
-}
-
-export type Headers = Record<string, string | Record<string, string> | string[]>;
-
-
-
 
 export class Ami {
 
-    public static textSplit= textSplit;
+    public static textSplit = textSplit;
 
-    public static base64TextSplit= base64TextSplit;
+    public static base64TextSplit = base64TextSplit;
 
     public static generateUniqueActionId: () => string = (() => {
 
@@ -38,21 +23,18 @@ export class Ami {
 
     private static localhostInstance: Ami | undefined = undefined;
 
-    public static localhost(params?: {
-        astConfPath?: string;
-        user?: string;
-    }): Ami {
+    public static localhost(params?: GetCredentialParams): Ami {
 
         if (this.localhostInstance) return this.localhostInstance;
 
-        return this.localhostInstance = new this(retrieveCredential(params));
+        return this.localhostInstance = new this(getCredentialFromConfigFile(params));
 
     };
 
     public readonly connection: any;
 
-    public readonly evt = new SyncEvent<ManagerEvent>();
-    public readonly evtUserEvent = new SyncEvent<UserEvent>();
+    public readonly evt = new SyncEvent<Ami.ManagerEvent>();
+    public readonly evtUserEvent = new SyncEvent<Ami.UserEvent>();
 
     private isFullyBooted = false;
 
@@ -77,8 +59,8 @@ export class Ami {
     public lastActionId: string = "";
 
     public async userEvent(userEvent: {
-        userevent: UserEvent['userevent'],
-        actionid?: UserEvent['actionid'],
+        userevent: Ami.UserEvent['userevent'],
+        actionid?: Ami.UserEvent['actionid'],
         [key: string]: string | undefined
     }) {
 
@@ -93,7 +75,7 @@ export class Ami {
     };
 
 
-    private static checkHeadersLength(headers: Headers): void {
+    private static checkHeadersLength(headers: Ami.Headers): void {
 
         let check = (text: string, key: string) => {
             if (Ami.textSplit(text, str => str).length !== 1)
@@ -117,7 +99,7 @@ export class Ami {
 
     public postAction(
         action: string,
-        headers: Headers
+        headers: Ami.Headers
     ): Promise<any> {
 
         Ami.checkHeadersLength(headers);
@@ -152,7 +134,7 @@ export class Ami {
 
         await this.postAction(
             "MessageSend",
-            { to, from, "variable": packetHeaders || {}, "base64body": (new Buffer(body,"utf8")).toString("base64") }
+            { to, from, "variable": packetHeaders || {}, "base64body": (new Buffer(body, "utf8")).toString("base64") }
         );
 
     }
@@ -165,7 +147,7 @@ export class Ami {
         channel?: string
     ) {
 
-        let headers: Record<string,string>= { variable, value };
+        let headers: Record<string, string> = { variable, value };
 
         if (channel) headers = { ...headers, channel };
 
@@ -178,7 +160,7 @@ export class Ami {
         channel?: string
     ): Promise<string> {
 
-        let headers: Record<string,string> = { variable };
+        let headers: Record<string, string> = { variable };
 
         if (channel) headers = { ...headers, channel };
 
@@ -318,5 +300,23 @@ export class Ami {
         );
 
     }
+
+}
+
+export namespace Ami {
+
+    export interface ManagerEvent {
+        event: string;
+        privilege: string;
+        [header: string]: string;
+    }
+
+    export interface UserEvent {
+        userevent: string;
+        actionid: string;
+        [key: string]: string | undefined;
+    }
+
+    export type Headers = Record<string, string | Record<string, string> | string[]>;
 
 }

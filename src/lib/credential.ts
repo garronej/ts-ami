@@ -4,25 +4,20 @@ import * as path from "path";
 
 const astConfPath = path.join("/etc", "asterisk");
 
-
-export interface Credential {
+export type Credential= {
     port: number;
     host: string;
     user: string;
     secret: string;
 };
 
+export type GetCredentialParams = { astConfPath?: string; user?: string; };
 
-
-export function retrieveCredential(
-    params?: { astConfPath?: string; user?: string; }
-): Credential {
+export function getCredentialFromConfigFile(params?: GetCredentialParams): Credential {
 
     params || (params = {});
 
-
     let filePath = path.join(params.astConfPath || astConfPath, "manager.conf");
-
 
     if (!existsSync(filePath)) throw new Error("NO_FILE");
 
@@ -82,13 +77,7 @@ export function retrieveCredential(
 
     throw Error("NO_USER");
 
-
-
 }
-
-
-
-
 
 function getListAuthority(strList: string): string[] {
 
@@ -103,29 +92,31 @@ function isGranted(list: string[]): boolean {
     return true;
 
     /*
-
+ 
     let hasUser = false;
     let hasSystem = false;
     let hasConfig = false;
-
+ 
     for (let authority of list) {
-
+ 
         if (authority.toLowerCase() === "all")
             return true;
-
+ 
         if (authority.toLocaleLowerCase() === "user")
             hasUser = true;
-
+ 
         if (authority.toLocaleLowerCase() === "system")
             hasSystem = true;
-
+ 
         if (authority.toLocaleLowerCase() === "config")
             hasConfig = true;
-
+ 
     }
-
+ 
     return hasUser && (hasSystem || hasConfig);
-
+ 
     */
 
 }
+
+

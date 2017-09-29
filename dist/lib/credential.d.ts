@@ -1,10 +1,11 @@
-export interface Credential {
+export declare type Credential = {
     port: number;
     host: string;
     user: string;
     secret: string;
-}
-export declare function retrieveCredential(params?: {
+};
+export declare type GetCredentialParams = {
     astConfPath?: string;
     user?: string;
-}): Credential;
+};
+export declare function getCredentialFromConfigFile(params?: GetCredentialParams): Credential;
