@@ -1,14 +1,10 @@
-require("rejection-tracker").main(__dirname, "..", "..");
-
 import { Ami } from "../lib";
 
-import "./credential";
-
-(async () => {
+export async function start(){
 
     await (async function testSetGetVariable() {
 
-        let ami = Ami.localhost();
+        let ami = Ami.getInstance();
 
         let [variable, value] = ["FOO_BAR", "BAR_BAZ_FOO"];
 
@@ -16,22 +12,14 @@ import "./credential";
 
         console.assert((await ami.getVar(variable)) === value);
 
-        console.log("PASS");
-
-    })();
-
-    await (async function testEdgeCaseTextSplit() {
-
-        console.assert(JSON.stringify(Ami.base64TextSplit("")) === '[""]');
-
-        console.log("PASS");
+        console.log("PASS SET/GET VARIABLE");
 
     })();
 
 
     await (async function testOriginate() {
 
-        let ami = Ami.localhost();
+        let ami = Ami.getInstance();
 
         let context = "foo-context";
         let extension = "bar-extension";
@@ -67,18 +55,19 @@ import "./credential";
         //console.log({ appdata });
         console.assert(appdata === value);
 
-        console.log("PASS!");
+        console.log("PASS ORIGINATE");
 
     })();
 
-    Ami.localhost().disconnect();
+    Ami.getInstance().disconnect();
 
-})();
+}
+
 
 
 (async function testRunCliCommand() {
 
-    let ami = Ami.localhost();
+    let ami = Ami.getInstance();
 
     let output = await ami.runCliCommand("dialplan show");
 
@@ -92,7 +81,7 @@ import "./credential";
 
 (async function testDialplanManipulation() {
 
-    let ami = Ami.localhost();
+    let ami = Ami.getInstance();
 
     let context = "foobar";
     let extension = "1234";
@@ -115,7 +104,7 @@ import "./credential";
 
 (async function testVariable() {
 
-    let ami = Ami.localhost();
+    let ami = Ami.getInstance();
 
     ami.evt.attach(({ event }) => event === "Newchannel", evt => {
 
@@ -130,5 +119,4 @@ import "./credential";
     //await ami.messageSend("foo", "bar", "coucou", ["foo", "bar" ] as any);
 
 });
-
 

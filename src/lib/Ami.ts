@@ -1,31 +1,58 @@
 import { SyncEvent } from "ts-events-extended";
 import * as AstMan from "asterisk-manager";
-import { Credential, } from "./Credential";
-import { textSplit, base64TextSplit } from "./textSplit";
+import { Credential } from "./Credential";
+import { b64Split, b64Unsplit, b64Dec, b64Enc, b64crop } from "./textSplit";
+import * as api from "./apiTransport";
+import * as path from "path";
+
+let counter = Date.now();
 
 export class Ami {
 
-    public static textSplit = textSplit;
+    private static instance: Ami | undefined= undefined;
 
-    public static base64TextSplit = base64TextSplit;
+    public static get hasInstance(): boolean {
+        return !!this.instance;
+    }
 
-    public static generateUniqueActionId: () => string = (() => {
+    public static getInstance(asteriskManagerUser?: string, asteriskConfigRoot?: string): Ami;
+    public static getInstance(asteriskManagerCredential: Credential): Ami;
+    public static getInstance(...inputs){
 
-        let counter = Date.now();
+        if( this.instance ) return this.instance;
 
-        return (): string => (counter++).toString();
+        this.instance= new this(inputs[0], inputs[1]);
 
-    })();
+        return this.instance;
 
-    private static localhostInstance: Ami | undefined = undefined;
+    }
 
-    public static localhost(params?: Credential.Params): Ami {
+    public disconnect(): Promise<void> {
 
-        if (this.localhostInstance) return this.localhostInstance;
+        if( Ami.instance === this ) Ami.instance= undefined;
 
-        return this.localhostInstance = new this(Credential.getFromConfigFile(params));
+        return new Promise<void>(
+            resolve => this.connection.disconnect(
+                () => resolve()
+            )
+        );
 
-    };
+    }
+
+
+    public startApiServer(): api.AmiApiServer {
+        return new api.AmiApiServer(this);
+    }
+
+    public startApiClient(): api.AmiApiClient {
+        return new api.AmiApiClient(this);
+    }
+
+
+
+    public static generateUniqueActionId(): string {
+        return `${counter++}`;
+    }
 
     public readonly connection: any;
 
@@ -34,7 +61,42 @@ export class Ami {
 
     private isFullyBooted = false;
 
-    constructor(public readonly credential: Credential) {
+    public readonly credential: Credential;
+
+    constructor(asteriskManagerUser?: string, asteriskConfigRoot?: string);
+    constructor(asteriskManagerCredential: Credential);
+    constructor(...inputs){
+
+        let credential: Credential;
+
+        if( Credential.match(inputs[0]) ){
+
+            credential= inputs[0];
+
+        }else{
+
+            let asteriskManagerUser: string | undefined;
+            let asteriskConfigRoot: string;
+
+            let [ p1, p2 ]= inputs;
+
+            if(p1){
+                asteriskManagerUser= p1;
+            }else{
+                asteriskManagerUser= undefined;
+            }
+
+            if( p2 ){
+                asteriskConfigRoot= p2;
+            }else{
+                asteriskConfigRoot= path.join("/etc", "asterisk");
+            }
+
+            credential= Credential.getFromConfigFile(asteriskConfigRoot, asteriskManagerUser);
+
+        }
+
+        this.credential= credential;
 
         let { port, host, user, secret } = credential;
 
@@ -50,7 +112,6 @@ export class Ami {
         this.connection.on("close", () => { this.isFullyBooted = false; });
 
     }
-
 
     public lastActionId: string = "";
 
@@ -71,39 +132,16 @@ export class Ami {
     };
 
 
-    private static checkHeadersLength(headers: Ami.Headers): void {
-
-        let check = (text: string, key: string) => {
-            if (Ami.textSplit(text, str => str).length !== 1)
-                throw new Error("Line too long");
-        };
-
-        for (let key of Object.keys(headers)) {
-
-            let value = headers[key];
-
-            if (typeof value === "string")
-                check(value, key);
-            else if (value instanceof Array)
-                check(value.join(","), key);
-            else
-                this.checkHeadersLength(value);
-
-        }
-
-    }
-
     public postAction(
         action: string,
         headers: Ami.Headers
     ): Promise<any> {
 
-        Ami.checkHeadersLength(headers);
-
         return new Promise<any>(async (resolve, reject) => {
 
-            if (!headers.actionid)
+            if (!headers.actionid){
                 headers.actionid = Ami.generateUniqueActionId();
+            }
 
             this.lastActionId = headers.actionid as string;
 
@@ -130,7 +168,7 @@ export class Ami {
 
         await this.postAction(
             "MessageSend",
-            { to, from, "variable": packetHeaders || {}, "base64body": (new Buffer(body, "utf8")).toString("base64") }
+            { to, from, "variable": packetHeaders || {}, "base64body": b64Enc(body) }
         );
 
     }
@@ -286,33 +324,49 @@ export class Ami {
 
     }
 
-
-    public disconnect(): Promise<void> {
-
-        return new Promise<void>(
-            resolve => this.connection.disconnect(
-                () => resolve()
-            )
-        );
-
-    }
-
 }
 
 export namespace Ami {
 
-    export interface ManagerEvent {
+    export type ManagerEvent = {
         event: string;
         privilege: string;
         [header: string]: string;
-    }
+    };
 
-    export interface UserEvent {
+    export type UserEvent = {
         userevent: string;
         actionid: string;
         [key: string]: string | undefined;
-    }
+    };
 
     export type Headers = Record<string, string | Record<string, string> | string[]>;
+
+    export class TimeoutError extends Error {
+        constructor(method: string, timeout: number) {
+            super(`Request ${method} timed out after ${timeout} ms`);
+            Object.setPrototypeOf(this, new.target.prototype);
+        }
+    }
+
+    export class RemoteError extends Error {
+        constructor(message: string) {
+            super(message);
+            Object.setPrototypeOf(this, new.target.prototype);
+        }
+    }
+
+
+    export const asteriskBufferSize = 1024;
+    export const headerValueMaxLength = (asteriskBufferSize - 1) - ("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n").length;
+
+    export const b64= {
+        "split": (text: string)=> b64Split(headerValueMaxLength, text),
+        "unsplit": b64Unsplit,
+        "enc": b64Enc,
+        "dec": b64Dec,
+        "crop": (text: string)=> b64crop(headerValueMaxLength, text)
+    }
+
 
 }

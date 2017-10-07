@@ -1,4 +1,14 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __assign = (this && this.__assign) || Object.assign || function(t) {
     for (var s, i = 1, n = arguments.length; i < n; i++) {
         s = arguments[i];
@@ -42,6 +52,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 var __values = (this && this.__values) || function (o) {
     var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
     if (m) return m.call(o);
@@ -57,14 +83,43 @@ var ts_events_extended_1 = require("ts-events-extended");
 var AstMan = require("asterisk-manager");
 var Credential_1 = require("./Credential");
 var textSplit_1 = require("./textSplit");
-var Ami = (function () {
-    function Ami(credential) {
+var api = require("./apiTransport");
+var path = require("path");
+var counter = Date.now();
+var Ami = /** @class */ (function () {
+    function Ami() {
+        var inputs = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            inputs[_i] = arguments[_i];
+        }
         var _this = this;
-        this.credential = credential;
         this.evt = new ts_events_extended_1.SyncEvent();
         this.evtUserEvent = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
         this.lastActionId = "";
+        var credential;
+        if (Credential_1.Credential.match(inputs[0])) {
+            credential = inputs[0];
+        }
+        else {
+            var asteriskManagerUser = void 0;
+            var asteriskConfigRoot = void 0;
+            var _a = __read(inputs, 2), p1 = _a[0], p2 = _a[1];
+            if (p1) {
+                asteriskManagerUser = p1;
+            }
+            else {
+                asteriskManagerUser = undefined;
+            }
+            if (p2) {
+                asteriskConfigRoot = p2;
+            }
+            else {
+                asteriskConfigRoot = path.join("/etc", "asterisk");
+            }
+            credential = Credential_1.Credential.getFromConfigFile(asteriskConfigRoot, asteriskManagerUser);
+        }
+        this.credential = credential;
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
         this.connection = new AstMan(port, host, user, secret, true);
         this.connection.setMaxListeners(Infinity);
@@ -74,12 +129,38 @@ var Ami = (function () {
         this.connection.on("fullybooted", function () { _this.isFullyBooted = true; });
         this.connection.on("close", function () { _this.isFullyBooted = false; });
     }
-    Ami.localhost = function (params) {
-        if (this.localhostInstance)
-            return this.localhostInstance;
-        return this.localhostInstance = new this(Credential_1.Credential.getFromConfigFile(params));
+    Object.defineProperty(Ami, "hasInstance", {
+        get: function () {
+            return !!this.instance;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Ami.getInstance = function () {
+        var inputs = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            inputs[_i] = arguments[_i];
+        }
+        if (this.instance)
+            return this.instance;
+        this.instance = new this(inputs[0], inputs[1]);
+        return this.instance;
     };
-    ;
+    Ami.prototype.disconnect = function () {
+        var _this = this;
+        if (Ami.instance === this)
+            Ami.instance = undefined;
+        return new Promise(function (resolve) { return _this.connection.disconnect(function () { return resolve(); }); });
+    };
+    Ami.prototype.startApiServer = function () {
+        return new api.AmiApiServer(this);
+    };
+    Ami.prototype.startApiClient = function () {
+        return new api.AmiApiClient(this);
+    };
+    Ami.generateUniqueActionId = function () {
+        return "" + counter++;
+    };
     Ami.prototype.userEvent = function (userEvent) {
         return __awaiter(this, void 0, void 0, function () {
             var action, _a, _b, key, e_1, _c;
@@ -110,42 +191,16 @@ var Ami = (function () {
         });
     };
     ;
-    Ami.checkHeadersLength = function (headers) {
-        var check = function (text, key) {
-            if (Ami.textSplit(text, function (str) { return str; }).length !== 1)
-                throw new Error("Line too long");
-        };
-        try {
-            for (var _a = __values(Object.keys(headers)), _b = _a.next(); !_b.done; _b = _a.next()) {
-                var key = _b.value;
-                var value = headers[key];
-                if (typeof value === "string")
-                    check(value, key);
-                else if (value instanceof Array)
-                    check(value.join(","), key);
-                else
-                    this.checkHeadersLength(value);
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
-            }
-            finally { if (e_2) throw e_2.error; }
-        }
-        var e_2, _c;
-    };
     Ami.prototype.postAction = function (action, headers) {
         var _this = this;
-        Ami.checkHeadersLength(headers);
         return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!headers.actionid)
+                        if (!headers.actionid) {
                             headers.actionid = Ami.generateUniqueActionId();
+                        }
                         this.lastActionId = headers.actionid;
                         if (!!this.isFullyBooted) return [3 /*break*/, 2];
                         return [4 /*yield*/, new Promise(function (resolve) { return _this.connection.once("fullybooted", function () { return resolve(); }); })];
@@ -163,7 +218,7 @@ var Ami = (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.postAction("MessageSend", { to: to, from: from, "variable": packetHeaders || {}, "base64body": (new Buffer(body, "utf8")).toString("base64") })];
+                    case 0: return [4 /*yield*/, this.postAction("MessageSend", { to: to, from: from, "variable": packetHeaders || {}, "base64body": textSplit_1.b64Enc(body) })];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -322,17 +377,41 @@ var Ami = (function () {
             });
         });
     };
-    Ami.prototype.disconnect = function () {
-        var _this = this;
-        return new Promise(function (resolve) { return _this.connection.disconnect(function () { return resolve(); }); });
-    };
-    Ami.textSplit = textSplit_1.textSplit;
-    Ami.base64TextSplit = textSplit_1.base64TextSplit;
-    Ami.generateUniqueActionId = (function () {
-        var counter = Date.now();
-        return function () { return (counter++).toString(); };
-    })();
-    Ami.localhostInstance = undefined;
+    Ami.instance = undefined;
     return Ami;
 }());
+exports.Ami = Ami;
+(function (Ami) {
+    var TimeoutError = /** @class */ (function (_super) {
+        __extends(TimeoutError, _super);
+        function TimeoutError(method, timeout) {
+            var _newTarget = this.constructor;
+            var _this = _super.call(this, "Request " + method + " timed out after " + timeout + " ms") || this;
+            Object.setPrototypeOf(_this, _newTarget.prototype);
+            return _this;
+        }
+        return TimeoutError;
+    }(Error));
+    Ami.TimeoutError = TimeoutError;
+    var RemoteError = /** @class */ (function (_super) {
+        __extends(RemoteError, _super);
+        function RemoteError(message) {
+            var _newTarget = this.constructor;
+            var _this = _super.call(this, message) || this;
+            Object.setPrototypeOf(_this, _newTarget.prototype);
+            return _this;
+        }
+        return RemoteError;
+    }(Error));
+    Ami.RemoteError = RemoteError;
+    Ami.asteriskBufferSize = 1024;
+    Ami.headerValueMaxLength = (Ami.asteriskBufferSize - 1) - ("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n").length;
+    Ami.b64 = {
+        "split": function (text) { return textSplit_1.b64Split(Ami.headerValueMaxLength, text); },
+        "unsplit": textSplit_1.b64Unsplit,
+        "enc": textSplit_1.b64Enc,
+        "dec": textSplit_1.b64Dec,
+        "crop": function (text) { return textSplit_1.b64crop(Ami.headerValueMaxLength, text); }
+    };
+})(Ami = exports.Ami || (exports.Ami = {}));
 exports.Ami = Ami;

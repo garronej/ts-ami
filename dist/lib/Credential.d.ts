@@ -5,9 +5,6 @@ export declare type Credential = {
     secret: string;
 };
 export declare namespace Credential {
-    type Params = {
-        astConfPath?: string;
-        user?: string;
-    };
-    function getFromConfigFile(params?: Params): Credential;
+    function match(input: any): input is Credential;
+    function getFromConfigFile(asteriskConfigRoot: string, user?: string): Credential;
 }

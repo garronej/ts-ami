@@ -13,12 +13,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var ini_extended_1 = require("ini-extended");
 var fs_1 = require("fs");
 var path = require("path");
-var astConfPath = path.join("/etc", "asterisk");
 var Credential;
 (function (Credential) {
-    function getFromConfigFile(params) {
-        params || (params = {});
-        var filePath = path.join(params.astConfPath || astConfPath, "manager.conf");
+    function match(input) {
+        try {
+            return !!input.port;
+        }
+        catch (_a) {
+            return false;
+        }
+    }
+    Credential.match = match;
+    function getFromConfigFile(asteriskConfigRoot, user) {
+        var filePath = path.join(asteriskConfigRoot, "manager.conf");
         if (!fs_1.existsSync(filePath))
             throw new Error("NO_FILE");
         var config = ini_extended_1.ini.parseStripWhitespace(fs_1.readFileSync(filePath, "utf8"));
@@ -26,9 +33,9 @@ var Credential;
         var port = general.port ? parseInt(general.port) : 5038;
         var host = (general.bindaddr && general.bindaddr !== "0.0.0.0") ? general.bindaddr : "127.0.0.1";
         delete config.general;
-        if (params.user && !config[params.user])
-            throw new Error("User " + params.user + " not found in config file");
-        var usersToTest = params.user ? [params.user] : Object.keys(config);
+        if (user && !config[user])
+            throw new Error("User " + user + " not found in config file");
+        var usersToTest = user ? [user] : Object.keys(config);
         try {
             for (var usersToTest_1 = __values(usersToTest), usersToTest_1_1 = usersToTest_1.next(); !usersToTest_1_1.done; usersToTest_1_1 = usersToTest_1.next()) {
                 var userName = usersToTest_1_1.value;

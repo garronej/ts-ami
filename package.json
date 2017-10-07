@@ -1,12 +1,13 @@
 {
   "name": "ts-ami",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Asterisk AMI client for TypeScript",
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
   "scripts": {
     "tsc": "node ./node_modules/.bin/tsc -p ./tsconfig.json",
-    "test": "node ./dist/test/main"
+    "tsc-w": "node ./node_modules/typescript/bin/tsc -w -p ./tsconfig.json",
+    "test": "node ./dist/test/index"
   },
   "repository": {
     "type": "git",
@@ -22,11 +23,12 @@
     "asterisk-manager": "^0.1.16",
     "ini-extended": "garronej/ini-extended",
     "rejection-tracker": "garronej/rejection-tracker",
+    "super-json": "^2.2.0",
+    "timer-extended": "github:garronej/timer-extended",
     "ts-events-extended": "garronej/ts-events-extended"
   },
   "devDependencies": {
     "@types/node": "^4.2.2",
-    "typescript": "^2.4.1",
-    "why-is-node-running": "^1.2.2"
+    "typescript": "^2.5.3"
   }
 }

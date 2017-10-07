@@ -1,2 +1,1 @@
-export * from "./Ami";
-export * from "./Credential";
+export { Ami } from "./Ami";

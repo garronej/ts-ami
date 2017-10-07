@@ -1,89 +1,132 @@
-const lineMaxByteLength= 1024;
-const safeOffsetBytes= Buffer.byteLength("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n")
 
-function splitStep(
-    nByte: number,
-    text: string,
-    encodeFunction: (str: string) => string
-): [string, string] {
+export function b64Enc(str: string): string {
+    return (new Buffer(str,"utf8")).toString("base64");
+}
 
-    for (let index = 0; index < text.length; index++) {
+export function b64Dec(enc: string): string {
+    return (new Buffer(enc,"base64")).toString("utf8");
+}
 
-        if (Buffer.byteLength(encodeFunction(text.substring(0, index + 1))) > nByte) {
+/** 
+ * Assuming there is an index n in [ 0 ... lastIndex ] such as
+ * for all i <= n condition(i) is true
+ * and for all i > n condition(i) is false
+ * this function find n
+ */
+function findLastIndexFulfilling(
+    condition: (index: number)=> boolean,
+    lastIndex: number
+) {
 
-            if (index === 0) throw new Error("nByte to small to split this string with this encoding");
+    if( lastIndex < 0 ){
+        throw Error("range error");
+    }
 
-            return [encodeFunction(text.substring(0, index)), text.substring(index, text.length)];
+    if ( !condition(0) ) {
+        throw Error("no index fullfil the condition");
+    }
 
+    return (function callee(fromIndex, toIndex) {
+
+        if (fromIndex === toIndex) {
+
+            return fromIndex;
+
+        } else if (fromIndex + 1 === toIndex) {
+
+            if( condition(toIndex) ){
+                return toIndex;
+            }else{
+                return fromIndex;
+            }
+
+        } else {
+
+            let length = toIndex - fromIndex + 1;
+            let halfLength = Math.floor(length / 2);
+            let middleIndex = fromIndex + halfLength;
+
+            if (condition(middleIndex)) {
+
+                return callee(middleIndex, toIndex);
+
+            } else {
+
+                return callee(fromIndex, middleIndex);
+
+            }
+        }
+
+    })(0, lastIndex);
+
+}
+
+export function b64crop(partMaxLength: number, text: string): string {
+
+    let isNotTooLong = (index: number): boolean => {
+
+        let part = text.substring(0, index);
+
+        let encPart = b64Enc(part);
+
+        return encPart.length <= partMaxLength;
+
+    }
+
+    //99.9% of the cases for SMS
+    if (isNotTooLong(text.length)) {
+        return b64Enc(text.substring(0, text.length));
+    }
+
+    let index = findLastIndexFulfilling(isNotTooLong, text.length);
+
+    while (true) {
+
+        let part = text.substring(0, index);
+
+        let rest = text.substring(index, text.length);
+
+        if ((b64Dec(b64Enc(part)) + b64Dec(b64Enc(rest))) !== b64Dec(b64Enc(text))) {
+            index--;
+        } else {
+            return b64Enc(`${part}[...]`);
         }
 
     }
 
-    return [encodeFunction(text), ""];
-
 }
 
+export function textSplit(partMaxLength: number, text: string): string[] {
 
-function performSplit(
-    maxByte: number,
-    text: string,
-    encodingFunction: (str: string) => string
-): string[] {
+    let parts: string[] = [];
 
-    function callee(state: string[], rest: string): string[] {
+    let rest = text;
 
-        if (!rest) return state;
+    while (rest) {
 
-        let [encodedPart, newRest] = splitStep(maxByte, rest, encodingFunction);
-
-        state.push(encodedPart);
-
-        return callee(state, newRest);
+        if (partMaxLength >= rest.length) {
+            parts.push(rest);
+            rest = "";
+        } else {
+            parts.push(rest.substring(0, partMaxLength));
+            rest = rest.substring(partMaxLength, rest.length);
+        }
 
     }
 
-    return callee([], text);
+    return parts;
+
 
 }
 
-
-
-function generalCaseTextSplit(
+export function b64Split(
+    partMaxLength: number,
     text: string,
-    encodeFunction: (str: string) => string,
-    maxBytePerPart: number,
-    offsetBytes?: number
 ): string[] {
-
-    if (typeof (offsetBytes) === "number")
-        maxBytePerPart = maxBytePerPart - offsetBytes;
-
-    let out= performSplit(maxBytePerPart, text, encodeFunction);
-
-    if( !out.length ) out.push("");
-
-    return out;
-
+    return textSplit(partMaxLength, b64Enc(text));
 }
 
 
-export function textSplit(
-    text: string,
-    encodeFunction: (str: string) => string
-): string[] {
-
-    return generalCaseTextSplit(
-        text,
-        encodeFunction,
-        lineMaxByteLength - 1,
-        safeOffsetBytes
-    );
-
-}
-
-
-export function base64TextSplit( text: string ): string[] {
-
-    return textSplit( text, str => (new Buffer(str, "utf8")).toString("base64") );
-
+export function b64Unsplit(encodedParts: string[]): string {
+    return b64Dec(encodedParts.join(""));
 }

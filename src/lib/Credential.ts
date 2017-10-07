@@ -2,8 +2,6 @@ import { ini } from "ini-extended";
 import { readFileSync, existsSync } from "fs";
 import * as path from "path";
 
-const astConfPath = path.join("/etc", "asterisk");
-
 export type Credential = {
     port: number;
     host: string;
@@ -11,15 +9,25 @@ export type Credential = {
     secret: string;
 };
 
+
 export namespace Credential {
 
-    export type Params = { astConfPath?: string; user?: string; };
+    export function match(input: any): input is Credential {
 
-    export function getFromConfigFile(params?: Params): Credential {
+        try{
+            return !!(input as Credential).port;
+        }catch{
+            return false;
+        }
 
-        params || (params = {});
+    }
 
-        let filePath = path.join(params.astConfPath || astConfPath, "manager.conf");
+    export function getFromConfigFile(
+        asteriskConfigRoot: string, 
+        user?: string
+    ): Credential {
+
+        let filePath = path.join(asteriskConfigRoot, "manager.conf");
 
         if (!existsSync(filePath)) throw new Error("NO_FILE");
 
@@ -39,10 +47,10 @@ export namespace Credential {
         delete config.general;
 
 
-        if (params.user && !config[params.user])
-            throw new Error(`User ${params.user} not found in config file`);
+        if (user && !config[user])
+            throw new Error(`User ${user} not found in config file`);
 
-        let usersToTest = params.user ? [params.user] : Object.keys(config);
+        let usersToTest = user ? [user] : Object.keys(config);
 
         for (let userName of usersToTest) {
 

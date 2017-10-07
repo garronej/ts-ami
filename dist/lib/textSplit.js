@@ -1,56 +1,95 @@
 "use strict";
-var __read = (this && this.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var lineMaxByteLength = 1024;
-var safeOffsetBytes = Buffer.byteLength("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n");
-function splitStep(nByte, text, encodeFunction) {
-    for (var index = 0; index < text.length; index++) {
-        if (Buffer.byteLength(encodeFunction(text.substring(0, index + 1))) > nByte) {
-            if (index === 0)
-                throw new Error("nByte to small to split this string with this encoding");
-            return [encodeFunction(text.substring(0, index)), text.substring(index, text.length)];
+function b64Enc(str) {
+    return (new Buffer(str, "utf8")).toString("base64");
+}
+exports.b64Enc = b64Enc;
+function b64Dec(enc) {
+    return (new Buffer(enc, "base64")).toString("utf8");
+}
+exports.b64Dec = b64Dec;
+/**
+ * Assuming there is an index n in [ 0 ... lastIndex ] such as
+ * for all i <= n condition(i) is true
+ * and for all i > n condition(i) is false
+ * this function find n
+ */
+function findLastIndexFulfilling(condition, lastIndex) {
+    if (lastIndex < 0) {
+        throw Error("range error");
+    }
+    if (!condition(0)) {
+        throw Error("no index fullfil the condition");
+    }
+    return (function callee(fromIndex, toIndex) {
+        if (fromIndex === toIndex) {
+            return fromIndex;
+        }
+        else if (fromIndex + 1 === toIndex) {
+            if (condition(toIndex)) {
+                return toIndex;
+            }
+            else {
+                return fromIndex;
+            }
+        }
+        else {
+            var length = toIndex - fromIndex + 1;
+            var halfLength = Math.floor(length / 2);
+            var middleIndex = fromIndex + halfLength;
+            if (condition(middleIndex)) {
+                return callee(middleIndex, toIndex);
+            }
+            else {
+                return callee(fromIndex, middleIndex);
+            }
+        }
+    })(0, lastIndex);
+}
+function b64crop(partMaxLength, text) {
+    var isNotTooLong = function (index) {
+        var part = text.substring(0, index);
+        var encPart = b64Enc(part);
+        return encPart.length <= partMaxLength;
+    };
+    //99.9% of the cases for SMS
+    if (isNotTooLong(text.length)) {
+        return b64Enc(text.substring(0, text.length));
+    }
+    var index = findLastIndexFulfilling(isNotTooLong, text.length);
+    while (true) {
+        var part = text.substring(0, index);
+        var rest = text.substring(index, text.length);
+        if ((b64Dec(b64Enc(part)) + b64Dec(b64Enc(rest))) !== b64Dec(b64Enc(text))) {
+            index--;
+        }
+        else {
+            return b64Enc(part + "[...]");
         }
     }
-    return [encodeFunction(text), ""];
 }
-function performSplit(maxByte, text, encodingFunction) {
-    function callee(state, rest) {
-        if (!rest)
-            return state;
-        var _a = __read(splitStep(maxByte, rest, encodingFunction), 2), encodedPart = _a[0], newRest = _a[1];
-        state.push(encodedPart);
-        return callee(state, newRest);
+exports.b64crop = b64crop;
+function textSplit(partMaxLength, text) {
+    var parts = [];
+    var rest = text;
+    while (rest) {
+        if (partMaxLength >= rest.length) {
+            parts.push(rest);
+            rest = "";
+        }
+        else {
+            parts.push(rest.substring(0, partMaxLength));
+            rest = rest.substring(partMaxLength, rest.length);
+        }
     }
-    return callee([], text);
-}
-function generalCaseTextSplit(text, encodeFunction, maxBytePerPart, offsetBytes) {
-    if (typeof (offsetBytes) === "number")
-        maxBytePerPart = maxBytePerPart - offsetBytes;
-    var out = performSplit(maxBytePerPart, text, encodeFunction);
-    if (!out.length)
-        out.push("");
-    return out;
-}
-function textSplit(text, encodeFunction) {
-    return generalCaseTextSplit(text, encodeFunction, lineMaxByteLength - 1, safeOffsetBytes);
+    return parts;
 }
 exports.textSplit = textSplit;
-function base64TextSplit(text) {
-    return textSplit(text, function (str) { return (new Buffer(str, "utf8")).toString("base64"); });
+function b64Split(partMaxLength, text) {
+    return textSplit(partMaxLength, b64Enc(text));
 }
-exports.base64TextSplit = base64TextSplit;
+exports.b64Split = b64Split;
+function b64Unsplit(encodedParts) {
+    return b64Dec(encodedParts.join(""));
+}
+exports.b64Unsplit = b64Unsplit;
