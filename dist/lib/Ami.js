@@ -93,6 +93,8 @@ var Ami = /** @class */ (function () {
             inputs[_i] = arguments[_i];
         }
         var _this = this;
+        this._apiServer = undefined;
+        this._apiClient = undefined;
         this.evt = new ts_events_extended_1.SyncEvent();
         this.evtUserEvent = new ts_events_extended_1.SyncEvent();
         this.isFullyBooted = false;
@@ -152,12 +154,26 @@ var Ami = /** @class */ (function () {
             Ami.instance = undefined;
         return new Promise(function (resolve) { return _this.connection.disconnect(function () { return resolve(); }); });
     };
-    Ami.prototype.startApiServer = function () {
-        return new api.AmiApiServer(this);
-    };
-    Ami.prototype.startApiClient = function () {
-        return new api.AmiApiClient(this);
-    };
+    Object.defineProperty(Ami.prototype, "apiServer", {
+        get: function () {
+            if (this._apiServer)
+                return this._apiServer;
+            this._apiServer = new api.AmiApiServer(this);
+            return this._apiServer;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Ami.prototype, "apiClient", {
+        get: function () {
+            if (this._apiClient)
+                return this._apiClient;
+            this._apiClient = new api.AmiApiClient(this);
+            return this._apiClient;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Ami.generateUniqueActionId = function () {
         return "" + counter++;
     };

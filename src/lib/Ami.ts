@@ -40,12 +40,28 @@ export class Ami {
     }
 
 
-    public startApiServer(): api.AmiApiServer {
-        return new api.AmiApiServer(this);
+    private _apiServer: api.AmiApiServer | undefined = undefined;
+
+    public get apiServer(): api.AmiApiServer {
+
+        if( this._apiServer ) return this._apiServer;
+
+        this._apiServer= new api.AmiApiServer(this);
+
+        return this._apiServer;
+
     }
 
-    public startApiClient(): api.AmiApiClient {
-        return new api.AmiApiClient(this);
+    private _apiClient: api.AmiApiClient | undefined = undefined;
+
+    public get apiClient(): api.AmiApiClient {
+
+        if( this._apiClient ) return this._apiClient;
+
+        this._apiClient= new api.AmiApiClient(this);
+
+        return this._apiClient;
+
     }
 
 

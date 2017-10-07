@@ -7,8 +7,10 @@ export declare class Ami {
     static getInstance(asteriskManagerUser?: string, asteriskConfigRoot?: string): Ami;
     static getInstance(asteriskManagerCredential: c.Credential): Ami;
     disconnect(): Promise<void>;
-    startApiServer(): api.AmiApiServer;
-    startApiClient(): api.AmiApiClient;
+    private _apiServer;
+    readonly apiServer: api.AmiApiServer;
+    private _apiClient;
+    readonly apiClient: api.AmiApiClient;
     static generateUniqueActionId(): string;
     readonly connection: any;
     readonly evt: SyncEvent<Ami.ManagerEvent>;

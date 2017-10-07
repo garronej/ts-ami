@@ -8,10 +8,10 @@ export async function start(){
         let amiClient = Ami.getInstance();
         console.assert(Ami.hasInstance);
 
-        let apiClient = amiClient.startApiClient()
+        let apiClient = amiClient.apiClient;
 
         let amiServer = new Ami(amiClient.credential);
-        let apiServer = amiServer.startApiServer();
+        let apiServer = amiServer.apiServer;
 
         amiServer.evtUserEvent.attach(() => console.assert(false, "m4"));
 
@@ -37,10 +37,10 @@ export async function start(){
         console.assert(!Ami.hasInstance);
 
         let amiClient = Ami.getInstance();
-        let apiClient = amiClient.startApiClient()
+        let apiClient = amiClient.apiClient;
 
         let amiServer = new Ami(amiClient.credential);
-        let apiServer = amiServer.startApiServer();
+        let apiServer = amiServer.apiServer;
 
         let _method = "myMethod";
 
@@ -76,8 +76,8 @@ export async function start(){
     await (async function testRequest() {
 
 
-        let client = Ami.getInstance().startApiClient();
-        let server = (new Ami(client.ami.credential)).startApiServer();
+        let client = Ami.getInstance().apiClient;
+        let server = (new Ami(client.ami.credential)).apiServer;
 
         let _method = "myMethod";
 
@@ -109,8 +109,8 @@ export async function start(){
 
     await (async function testRequest() {
 
-        let client = Ami.getInstance().startApiClient();
-        let server = (new Ami(client.ami.credential)).startApiServer();
+        let client = Ami.getInstance().apiClient;
+        let server = (new Ami(client.ami.credential)).apiServer;
 
         let _method = "myMethod";
 
@@ -143,10 +143,10 @@ export async function start(){
         console.assert(!Ami.hasInstance);
 
         let amiClient = Ami.getInstance();
-        let apiClient = amiClient.startApiClient()
+        let apiClient = amiClient.apiClient;
 
         let amiServer = new Ami(amiClient.credential);
-        let apiServer = amiServer.startApiServer();
+        let apiServer = amiServer.apiServer;
 
         let _method = "myMethod";
 
@@ -191,10 +191,10 @@ export async function start(){
         console.assert(!Ami.hasInstance);
 
         let amiClient = Ami.getInstance();
-        let apiClient = amiClient.startApiClient()
+        let apiClient = amiClient.apiClient;
 
         let amiServer = new Ami(amiClient.credential);
-        let apiServer = amiServer.startApiServer();
+        let apiServer = amiServer.apiServer;
 
         let _method = "myMethod";
 

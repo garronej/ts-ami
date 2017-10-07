@@ -1,6 +1,6 @@
 {
   "name": "ts-ami",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Asterisk AMI client for TypeScript",
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
