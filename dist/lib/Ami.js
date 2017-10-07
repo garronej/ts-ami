@@ -81,7 +81,7 @@ var __values = (this && this.__values) || function (o) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts_events_extended_1 = require("ts-events-extended");
 var AstMan = require("asterisk-manager");
-var Credential_1 = require("./Credential");
+var c = require("./Credential");
 var textSplit_1 = require("./textSplit");
 var api = require("./apiTransport");
 var path = require("path");
@@ -98,7 +98,7 @@ var Ami = /** @class */ (function () {
         this.isFullyBooted = false;
         this.lastActionId = "";
         var credential;
-        if (Credential_1.Credential.match(inputs[0])) {
+        if (c.Credential.match(inputs[0])) {
             credential = inputs[0];
         }
         else {
@@ -117,7 +117,7 @@ var Ami = /** @class */ (function () {
             else {
                 asteriskConfigRoot = path.join("/etc", "asterisk");
             }
-            credential = Credential_1.Credential.getFromConfigFile(asteriskConfigRoot, asteriskManagerUser);
+            credential = c.Credential.getFromConfigFile(asteriskConfigRoot, asteriskManagerUser);
         }
         this.credential = credential;
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;

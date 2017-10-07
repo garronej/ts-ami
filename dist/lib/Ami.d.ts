@@ -1,11 +1,11 @@
 import { SyncEvent } from "ts-events-extended";
-import { Credential } from "./Credential";
+import * as c from "./Credential";
 import * as api from "./apiTransport";
 export declare class Ami {
     private static instance;
     static readonly hasInstance: boolean;
     static getInstance(asteriskManagerUser?: string, asteriskConfigRoot?: string): Ami;
-    static getInstance(asteriskManagerCredential: Credential): Ami;
+    static getInstance(asteriskManagerCredential: c.Credential): Ami;
     disconnect(): Promise<void>;
     startApiServer(): api.AmiApiServer;
     startApiClient(): api.AmiApiClient;
@@ -14,9 +14,9 @@ export declare class Ami {
     readonly evt: SyncEvent<Ami.ManagerEvent>;
     readonly evtUserEvent: SyncEvent<Ami.UserEvent>;
     private isFullyBooted;
-    readonly credential: Credential;
+    readonly credential: Ami.Credential;
     constructor(asteriskManagerUser?: string, asteriskConfigRoot?: string);
-    constructor(asteriskManagerCredential: Credential);
+    constructor(asteriskManagerCredential: Ami.Credential);
     lastActionId: string;
     userEvent(userEvent: {
         userevent: Ami.UserEvent['userevent'];
@@ -34,6 +34,7 @@ export declare class Ami {
     originateLocalChannel(context: string, extension: string, channelVariables?: Record<string, string>): Promise<boolean>;
 }
 export declare namespace Ami {
+    type Credential = c.Credential;
     type ManagerEvent = {
         event: string;
         privilege: string;

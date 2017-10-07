@@ -1,6 +1,6 @@
 import { SyncEvent } from "ts-events-extended";
 import * as AstMan from "asterisk-manager";
-import { Credential } from "./Credential";
+import * as c from "./Credential";
 import { b64Split, b64Unsplit, b64Dec, b64Enc, b64crop } from "./textSplit";
 import * as api from "./apiTransport";
 import * as path from "path";
@@ -16,7 +16,7 @@ export class Ami {
     }
 
     public static getInstance(asteriskManagerUser?: string, asteriskConfigRoot?: string): Ami;
-    public static getInstance(asteriskManagerCredential: Credential): Ami;
+    public static getInstance(asteriskManagerCredential: c.Credential): Ami;
     public static getInstance(...inputs){
 
         if( this.instance ) return this.instance;
@@ -61,15 +61,15 @@ export class Ami {
 
     private isFullyBooted = false;
 
-    public readonly credential: Credential;
+    public readonly credential: Ami.Credential;
 
     constructor(asteriskManagerUser?: string, asteriskConfigRoot?: string);
-    constructor(asteriskManagerCredential: Credential);
+    constructor(asteriskManagerCredential: Ami.Credential);
     constructor(...inputs){
 
-        let credential: Credential;
+        let credential: Ami.Credential;
 
-        if( Credential.match(inputs[0]) ){
+        if( c.Credential.match(inputs[0]) ){
 
             credential= inputs[0];
 
@@ -92,7 +92,7 @@ export class Ami {
                 asteriskConfigRoot= path.join("/etc", "asterisk");
             }
 
-            credential= Credential.getFromConfigFile(asteriskConfigRoot, asteriskManagerUser);
+            credential= c.Credential.getFromConfigFile(asteriskConfigRoot, asteriskManagerUser);
 
         }
 
@@ -328,6 +328,8 @@ export class Ami {
 
 export namespace Ami {
 
+    export type Credential= c.Credential;
+
     export type ManagerEvent = {
         event: string;
         privilege: string;
@@ -367,6 +369,5 @@ export namespace Ami {
         "dec": b64Dec,
         "crop": (text: string)=> b64crop(headerValueMaxLength, text)
     }
-
 
 }
