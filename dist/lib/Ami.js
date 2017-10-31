@@ -83,9 +83,16 @@ var ts_events_extended_1 = require("ts-events-extended");
 var AstMan = require("asterisk-manager");
 var c = require("./Credential");
 var textSplit_1 = require("./textSplit");
-var api = require("./apiTransport");
+var amiApi = require("./amiApi");
+var agi = require("./agi");
 var path = require("path");
-var counter = Date.now();
+var uniqNow = (function () {
+    var last = 0;
+    return function () {
+        var now = Date.now();
+        return (now <= last) ? (++last) : (last = now);
+    };
+})();
 var Ami = /** @class */ (function () {
     function Ami() {
         var inputs = [];
@@ -93,12 +100,12 @@ var Ami = /** @class */ (function () {
             inputs[_i] = arguments[_i];
         }
         var _this = this;
-        this._apiServer = undefined;
-        this._apiClient = undefined;
         this.evt = new ts_events_extended_1.SyncEvent();
         this.evtUserEvent = new ts_events_extended_1.SyncEvent();
-        this.isFullyBooted = false;
+        this.isReady = false;
+        this.evtFullyBooted = new ts_events_extended_1.VoidSyncEvent();
         this.lastActionId = "";
+        this.actionPending = undefined;
         var credential;
         if (c.Credential.match(inputs[0])) {
             credential = inputs[0];
@@ -123,13 +130,25 @@ var Ami = /** @class */ (function () {
         }
         this.credential = credential;
         var port = credential.port, host = credential.host, user = credential.user, secret = credential.secret;
-        this.connection = new AstMan(port, host, user, secret, true);
-        this.connection.setMaxListeners(Infinity);
-        this.connection.keepConnected();
-        this.connection.on("managerevent", function (evt) { return _this.evt.post(evt); });
-        this.connection.on("userevent", function (evt) { return _this.evtUserEvent.post(evt); });
-        this.connection.on("fullybooted", function () { _this.isFullyBooted = true; });
-        this.connection.on("close", function () { _this.isFullyBooted = false; });
+        this.astManForEvents = new AstMan(port, host, user, secret, true);
+        this.astManForActions = new AstMan(port, host, user, secret, false);
+        this.astManForActions.setMaxListeners(Infinity);
+        this.astManForEvents.setMaxListeners(Infinity);
+        this.astManForActions.keepConnected();
+        this.astManForActions.keepConnected();
+        this.astManForEvents.on("managerevent", function (data) {
+            switch (data.event) {
+                case "FullyBooted":
+                    _this.isReady = true;
+                    _this.evtFullyBooted.post();
+                    break;
+                case "UserEvent":
+                    _this.evtUserEvent.post(data);
+                    break;
+            }
+            _this.evt.post(data);
+        });
+        this.astManForEvents.on("close", function () { return _this.isReady = false; });
     }
     Object.defineProperty(Ami, "hasInstance", {
         get: function () {
@@ -148,88 +167,146 @@ var Ami = /** @class */ (function () {
         this.instance = new this(inputs[0], inputs[1]);
         return this.instance;
     };
-    Ami.prototype.disconnect = function () {
-        var _this = this;
-        if (Ami.instance === this)
-            Ami.instance = undefined;
-        return new Promise(function (resolve) { return _this.connection.disconnect(function () { return resolve(); }); });
-    };
-    Object.defineProperty(Ami.prototype, "apiServer", {
-        get: function () {
-            if (this._apiServer)
-                return this._apiServer;
-            this._apiServer = new api.AmiApiServer(this);
-            return this._apiServer;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Ami.prototype, "apiClient", {
-        get: function () {
-            if (this._apiClient)
-                return this._apiClient;
-            this._apiClient = new api.AmiApiClient(this);
-            return this._apiClient;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Ami.generateUniqueActionId = function () {
-        return "" + counter++;
+        return "" + uniqNow();
+    };
+    Ami.prototype.disconnect = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (Ami.instance === this)
+                            Ami.instance = undefined;
+                        return [4 /*yield*/, Promise.all([
+                                new Promise(function (resolve) { return _this.astManForEvents.disconnect(resolve); }),
+                                new Promise(function (resolve) { return _this.astManForActions.disconnect(resolve); })
+                            ])];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Ami.prototype.createApiServer = function (apiId) {
+        return new amiApi.Server(this, apiId);
+    };
+    Ami.prototype.createApiClient = function (apiId) {
+        return new amiApi.Client(this, apiId);
+    };
+    Ami.prototype.startAgi = function (scripts, defaultScript) {
+        return agi.start(this, scripts, defaultScript);
+    };
+    Object.defineProperty(Ami.prototype, "ready", {
+        get: function () {
+            if (this.isReady) {
+                return Promise.resolve();
+            }
+            else {
+                return this.evtFullyBooted.waitFor();
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Ami.prototype.postAction = function (action, headers) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, this._postAction_(action, headers, false)];
+            });
+        });
+    };
+    Ami.prototype._postAction_ = function (action, headers, isRecursion) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            var isTemoraryConnection, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        isTemoraryConnection = this.lastActionId === "-1";
+                        if (!headers.actionid) {
+                            headers.actionid = Ami.generateUniqueActionId();
+                        }
+                        this.lastActionId = headers.actionid;
+                        if (!!this.isReady) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.ready];
+                    case 1:
+                        _b.sent();
+                        _b.label = 2;
+                    case 2:
+                        if (!isRecursion && action.toLowerCase() === "originate") {
+                            return [2 /*return*/, this.postActionOnNewConnection(action, headers)];
+                        }
+                        _b.label = 3;
+                    case 3:
+                        if (!this.actionPending) return [3 /*break*/, 8];
+                        _b.label = 4;
+                    case 4:
+                        _b.trys.push([4, 6, , 7]);
+                        return [4 /*yield*/, this.actionPending.waitFor(1500)];
+                    case 5:
+                        _b.sent();
+                        return [3 /*break*/, 7];
+                    case 6:
+                        _a = _b.sent();
+                        return [2 /*return*/, this.postActionOnNewConnection(action, headers)];
+                    case 7: return [3 /*break*/, 3];
+                    case 8:
+                        this.actionPending = new ts_events_extended_1.VoidSyncEvent();
+                        if (!!this.isReady) return [3 /*break*/, 10];
+                        return [4 /*yield*/, this.ready];
+                    case 9:
+                        _b.sent();
+                        _b.label = 10;
+                    case 10: return [4 /*yield*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                            var _this = this;
+                            return __generator(this, function (_a) {
+                                return [2 /*return*/, this.astManForActions.action(__assign({}, headers, { action: action }), function (error, res) {
+                                        _this.actionPending.post();
+                                        _this.actionPending = undefined;
+                                        if (error) {
+                                            reject(new Ami.ActionError(action, headers, error));
+                                        }
+                                        else {
+                                            resolve(res);
+                                        }
+                                    })];
+                            });
+                        }); })];
+                    case 11: return [2 /*return*/, _b.sent()];
+                }
+            });
+        });
+    };
+    Ami.prototype.postActionOnNewConnection = function (action, headers) {
+        var tmpAmi = new Ami(this.credential);
+        var prAction = tmpAmi._postAction_(action, headers, true);
+        prAction
+            .then(function () { return tmpAmi.disconnect(); })
+            .catch(function () { return tmpAmi.disconnect(); });
+        return prAction;
     };
     Ami.prototype.userEvent = function (userEvent) {
         return __awaiter(this, void 0, void 0, function () {
-            var action, _a, _b, key, e_1, _c;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var action, key;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         action = __assign({}, userEvent);
-                        try {
-                            for (_a = __values(Object.keys(action)), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                key = _b.value;
-                                if (action[key] === undefined)
-                                    delete action[key];
-                            }
-                        }
-                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                        finally {
-                            try {
-                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
-                            }
-                            finally { if (e_1) throw e_1.error; }
+                        for (key in action) {
+                            if (action[key] === undefined)
+                                delete action[key];
                         }
                         return [4 /*yield*/, this.postAction("UserEvent", action)];
                     case 1:
-                        _d.sent();
+                        _a.sent();
                         return [2 /*return*/];
                 }
             });
         });
     };
     ;
-    Ami.prototype.postAction = function (action, headers) {
-        var _this = this;
-        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!headers.actionid) {
-                            headers.actionid = Ami.generateUniqueActionId();
-                        }
-                        this.lastActionId = headers.actionid;
-                        if (!!this.isFullyBooted) return [3 /*break*/, 2];
-                        return [4 /*yield*/, new Promise(function (resolve) { return _this.connection.once("fullybooted", function () { return resolve(); }); })];
-                    case 1:
-                        _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        this.connection.action(__assign({}, headers, { action: action }), function (error, res) { return error ? reject(error) : resolve(res); });
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-    };
     Ami.prototype.messageSend = function (to, from, body, packetHeaders) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -298,6 +375,49 @@ var Ami = /** @class */ (function () {
             });
         });
     };
+    /** e.g call with ( "from-sip", "_[+0-9].", [ [ "NoOp", "FOO"], [ "Hangup" ] ] ) */
+    Ami.prototype.dialplanAddSetOfExtentions = function (context, extension, instructionSet) {
+        return __awaiter(this, void 0, void 0, function () {
+            var priority, instructionSet_1, instructionSet_1_1, instruction, application, applicationData, e_1_1, e_1, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.dialplanExtensionRemove(context, extension)];
+                    case 1:
+                        _b.sent();
+                        priority = 1;
+                        _b.label = 2;
+                    case 2:
+                        _b.trys.push([2, 7, 8, 9]);
+                        instructionSet_1 = __values(instructionSet), instructionSet_1_1 = instructionSet_1.next();
+                        _b.label = 3;
+                    case 3:
+                        if (!!instructionSet_1_1.done) return [3 /*break*/, 6];
+                        instruction = instructionSet_1_1.value;
+                        application = instruction[0];
+                        applicationData = instruction[1];
+                        return [4 /*yield*/, this.dialplanExtensionAdd(context, extension, priority++, application, applicationData)];
+                    case 4:
+                        _b.sent();
+                        _b.label = 5;
+                    case 5:
+                        instructionSet_1_1 = instructionSet_1.next();
+                        return [3 /*break*/, 3];
+                    case 6: return [3 /*break*/, 9];
+                    case 7:
+                        e_1_1 = _b.sent();
+                        e_1 = { error: e_1_1 };
+                        return [3 /*break*/, 9];
+                    case 8:
+                        try {
+                            if (instructionSet_1_1 && !instructionSet_1_1.done && (_a = instructionSet_1.return)) _a.call(instructionSet_1);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                        return [7 /*endfinally*/];
+                    case 9: return [2 /*return*/];
+                }
+            });
+        });
+    };
     Ami.prototype.runCliCommand = function (cliCommand) {
         return __awaiter(this, void 0, void 0, function () {
             var resp, output, errorResp_1;
@@ -325,6 +445,7 @@ var Ami = /** @class */ (function () {
             });
         });
     };
+    /** return true if extention removed */
     Ami.prototype.dialplanExtensionRemove = function (context, extension, priority) {
         return __awaiter(this, void 0, void 0, function () {
             var headers, error_1;
@@ -361,7 +482,7 @@ var Ami = /** @class */ (function () {
     };
     Ami.prototype.originateLocalChannel = function (context, extension, channelVariables) {
         return __awaiter(this, void 0, void 0, function () {
-            var headers, newInstance, answered, error_2;
+            var headers, answered, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -372,11 +493,10 @@ var Ami = /** @class */ (function () {
                             "data": "2000",
                             "variable": channelVariables
                         };
-                        newInstance = new Ami(this.credential);
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, newInstance.postAction("originate", headers)];
+                        return [4 /*yield*/, this.postAction("Originate", headers)];
                     case 2:
                         _a.sent();
                         answered = true;
@@ -385,10 +505,7 @@ var Ami = /** @class */ (function () {
                         error_2 = _a.sent();
                         answered = false;
                         return [3 /*break*/, 4];
-                    case 4: return [4 /*yield*/, newInstance.disconnect()];
-                    case 5:
-                        _a.sent();
-                        return [2 /*return*/, answered];
+                    case 4: return [2 /*return*/, answered];
                 }
             });
         });
@@ -398,28 +515,6 @@ var Ami = /** @class */ (function () {
 }());
 exports.Ami = Ami;
 (function (Ami) {
-    var TimeoutError = /** @class */ (function (_super) {
-        __extends(TimeoutError, _super);
-        function TimeoutError(method, timeout) {
-            var _newTarget = this.constructor;
-            var _this = _super.call(this, "Request " + method + " timed out after " + timeout + " ms") || this;
-            Object.setPrototypeOf(_this, _newTarget.prototype);
-            return _this;
-        }
-        return TimeoutError;
-    }(Error));
-    Ami.TimeoutError = TimeoutError;
-    var RemoteError = /** @class */ (function (_super) {
-        __extends(RemoteError, _super);
-        function RemoteError(message) {
-            var _newTarget = this.constructor;
-            var _this = _super.call(this, message) || this;
-            Object.setPrototypeOf(_this, _newTarget.prototype);
-            return _this;
-        }
-        return RemoteError;
-    }(Error));
-    Ami.RemoteError = RemoteError;
     Ami.asteriskBufferSize = 1024;
     Ami.headerValueMaxLength = (Ami.asteriskBufferSize - 1) - ("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n").length;
     Ami.b64 = {
@@ -429,5 +524,19 @@ exports.Ami = Ami;
         "dec": textSplit_1.b64Dec,
         "crop": function (text) { return textSplit_1.b64crop(Ami.headerValueMaxLength, text); }
     };
+    var ActionError = /** @class */ (function (_super) {
+        __extends(ActionError, _super);
+        function ActionError(action, headers, asteriskResponse) {
+            var _newTarget = this.constructor;
+            var _this = _super.call(this, "Asterisk manager error with action " + action) || this;
+            _this.action = action;
+            _this.headers = headers;
+            _this.asteriskResponse = asteriskResponse;
+            Object.setPrototypeOf(_this, _newTarget.prototype);
+            return _this;
+        }
+        return ActionError;
+    }(Error));
+    Ami.ActionError = ActionError;
 })(Ami = exports.Ami || (exports.Ami = {}));
 exports.Ami = Ami;

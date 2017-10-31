@@ -1,3 +1,7 @@
 require("rejection-tracker")(__dirname, "..", "..");
 
-export { Ami } from "./Ami";
+import { Ami } from "./Ami";
+import * as agi from "./agi";
+import * as amiApi from "./amiApi";
+
+export { Ami, agi, amiApi };

@@ -12,7 +12,7 @@ namespace JSON {
             superJson.dateSerializer,
             {
                 "serialize": error => [error.message],
-                "deserialize": message => new Ami.RemoteError(message),
+                "deserialize": message => new RemoteError(message),
                 "isInstance": obj => obj instanceof Error,
                 "name": "Error"
             }
@@ -103,8 +103,14 @@ namespace Message {
             let tasks: Promise<void>[] = [];
 
             for (let userEvent of buildUserEvents(message, userevent)) {
+
                 tasks.push(ami.userEvent(userEvent));
-                ami.evtUserEvent.attachOnceExtract(({ actionid }) => actionid === userEvent.actionid);
+
+                ami.evtUserEvent.attachOnceExtract(
+                    ({ actionid }) => actionid === userEvent.actionid, 
+                    ()=>{}
+                );
+
             }
 
             await Promise.all(tasks);
@@ -197,11 +203,11 @@ namespace Message {
 
 }
 
-const requestUserevent = "API_REQUEST_doOOdlP3d";
-const responseUserevent = "API_RESPONSE_aoZksOdd";
-const eventUserevent = "API_EVENT_doeODkOd";
+const requestUserevent = "API_REQUEST_";
+const responseUserevent = "API_RESPONSE_";
+const eventUserevent = "API_EVENT_";
 
-export class AmiApiServer {
+export class Server {
 
     public readonly evtRequest = new SyncEvent<{
         method: string;
@@ -210,13 +216,16 @@ export class AmiApiServer {
         reject(error: Error): Promise<void>;
     }>();
 
-    constructor(public readonly ami: Ami) {
+    constructor(
+        public readonly ami: Ami, 
+        private readonly apiId: string
+    ) {
 
-        let sendResponse = Message.makeSendMessage(ami, responseUserevent);
+        let sendResponse = Message.makeSendMessage(ami, `${responseUserevent}${apiId}`);
 
         let resolveOrReject= (id: string, payload: any)=> sendResponse({ id, payload });
 
-        Message.makeEvtMessage(ami, requestUserevent).attach(
+        Message.makeEvtMessage(ami, `${requestUserevent}${apiId}`).attach(
             ({ id, payload }) => this.evtRequest.post({
                 "method": payload.method,
                 "params": payload.params,
@@ -227,7 +236,7 @@ export class AmiApiServer {
 
     }
 
-    private readonly sendEvent = Message.makeSendMessage(this.ami, eventUserevent);
+    private readonly sendEvent = Message.makeSendMessage(this.ami, `${eventUserevent}${this.apiId}`);
 
     public postEvent(name: string, event: any): Promise<void> {
         return this.sendEvent({
@@ -239,21 +248,24 @@ export class AmiApiServer {
 }
 
 
-export class AmiApiClient {
+export class Client {
 
     public readonly evtEvent = new SyncEvent<{ name: string; event: any }>();
 
 
-    constructor(public readonly ami: Ami) {
+    constructor(
+        public readonly ami: Ami,
+        private readonly apiId: string
+    ) {
 
-        Message.makeEvtMessage(ami, eventUserevent).attach(
+        Message.makeEvtMessage(ami, `${eventUserevent}${this.apiId}`).attach(
             ({ payload }) => this.evtEvent.post(payload)
         );
 
     }
 
-    private readonly sendRequest = Message.makeSendMessage(this.ami, requestUserevent);
-    private readonly evtResponse = Message.makeEvtMessage(this.ami, responseUserevent);
+    private readonly sendRequest = Message.makeSendMessage(this.ami, `${requestUserevent}${this.apiId}`);
+    private readonly evtResponse = Message.makeEvtMessage(this.ami, `${responseUserevent}${this.apiId}`);
 
     public async makeRequest(
         method: string, 
@@ -270,15 +282,29 @@ export class AmiApiClient {
         try {
             payload = (await this.evtResponse.waitFor(({ id }) => id === requestId, timeout)).payload;
         } catch{
-            throw new Ami.TimeoutError(method, timeout);
+            throw new TimeoutError(method, timeout);
         }
 
-        if( payload instanceof Error ){
+        if (payload instanceof Error) {
             throw payload;
-        }else{
+        } else {
             return payload;
         }
 
     }
 
+}
+
+export class TimeoutError extends Error {
+    constructor(method: string, timeout: number) {
+        super(`Request ${method} timed out after ${timeout} ms`);
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+}
+
+export class RemoteError extends Error {
+    constructor(message: string) {
+        super(message);
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
 }

@@ -1,6 +1,8 @@
-import { Ami } from "../lib";
+import { Ami, amiApi } from "../lib";
 
 export async function start(){
+
+    const apiId= "test-api";
 
     await (async function testEvent() {
 
@@ -8,10 +10,10 @@ export async function start(){
         let amiClient = Ami.getInstance();
         console.assert(Ami.hasInstance);
 
-        let apiClient = amiClient.apiClient;
+        let apiClient = amiClient.createApiClient(apiId);
 
         let amiServer = new Ami(amiClient.credential);
-        let apiServer = amiServer.apiServer;
+        let apiServer = amiServer.createApiServer(apiId);
 
         amiServer.evtUserEvent.attach(() => console.assert(false, "m4"));
 
@@ -37,10 +39,10 @@ export async function start(){
         console.assert(!Ami.hasInstance);
 
         let amiClient = Ami.getInstance();
-        let apiClient = amiClient.apiClient;
+        let apiClient = amiClient.createApiClient(apiId);
 
         let amiServer = new Ami(amiClient.credential);
-        let apiServer = amiServer.apiServer;
+        let apiServer = amiServer.createApiServer(apiId);
 
         let _method = "myMethod";
 
@@ -68,7 +70,6 @@ export async function start(){
         amiClient.disconnect();
         amiServer.disconnect();
 
-
         console.log("PASS REQUEST");
 
     })();
@@ -76,8 +77,8 @@ export async function start(){
     await (async function testRequest() {
 
 
-        let client = Ami.getInstance().apiClient;
-        let server = (new Ami(client.ami.credential)).apiServer;
+        let client = Ami.getInstance().createApiClient(apiId);
+        let server = (new Ami(client.ami.credential)).createApiServer(apiId);
 
         let _method = "myMethod";
 
@@ -109,8 +110,8 @@ export async function start(){
 
     await (async function testRequest() {
 
-        let client = Ami.getInstance().apiClient;
-        let server = (new Ami(client.ami.credential)).apiServer;
+        let client = Ami.getInstance().createApiClient(apiId);
+        let server = (new Ami(client.ami.credential)).createApiServer(apiId);
 
         let _method = "myMethod";
 
@@ -143,10 +144,10 @@ export async function start(){
         console.assert(!Ami.hasInstance);
 
         let amiClient = Ami.getInstance();
-        let apiClient = amiClient.apiClient;
+        let apiClient = amiClient.createApiClient(apiId);
 
         let amiServer = new Ami(amiClient.credential);
-        let apiServer = amiServer.apiServer;
+        let apiServer = amiServer.createApiServer(apiId);
 
         let _method = "myMethod";
 
@@ -160,7 +161,7 @@ export async function start(){
                 console.assert(method === _method, "m1");
                 console.assert(JSON.stringify(params) === JSON.stringify(_params), "m2");
 
-                reject(new Error(errorMessage));;
+                reject(new Error(errorMessage));
 
             }
         );
@@ -173,7 +174,7 @@ export async function start(){
 
         } catch (error) {
 
-            console.assert(error instanceof Ami.RemoteError);
+            console.assert(error instanceof amiApi.RemoteError);
 
             console.assert(error.message === errorMessage);
 
@@ -191,10 +192,10 @@ export async function start(){
         console.assert(!Ami.hasInstance);
 
         let amiClient = Ami.getInstance();
-        let apiClient = amiClient.apiClient;
+        let apiClient = amiClient.createApiClient(apiId);
 
         let amiServer = new Ami(amiClient.credential);
-        let apiServer = amiServer.apiServer;
+        let apiServer = amiServer.createApiServer(apiId);
 
         let _method = "myMethod";
 
@@ -213,7 +214,7 @@ export async function start(){
         }catch(error){
 
             console.assert( Date.now() - before < timeout + 200 );
-            console.assert(error instanceof Ami.TimeoutError);
+            console.assert(error instanceof amiApi.TimeoutError);
 
         }
 

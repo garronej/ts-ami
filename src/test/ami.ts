@@ -19,6 +19,8 @@ export async function start(){
 
     await (async function testOriginate() {
 
+        console.log("start test originate");
+
         let ami = Ami.getInstance();
 
         let context = "foo-context";
@@ -46,16 +48,13 @@ export async function start(){
 
         let answered = await ami.originateLocalChannel(context, extension, { "FOO_VARIABLE": value });
 
-        //console.log({ answered });
-
         console.assert(answered === true);
 
         let { appdata } = await pr;
 
-        //console.log({ appdata });
         console.assert(appdata === value);
 
-        console.log("PASS ORIGINATE");
+        console.log("PASS ORIGINATE LOCAL CHANNEL");
 
     })();
 

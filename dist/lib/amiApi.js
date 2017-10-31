@@ -1,4 +1,14 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -58,7 +68,7 @@ var JSON;
             superJson.dateSerializer,
             {
                 "serialize": function (error) { return [error.message]; },
-                "deserialize": function (message) { return new Ami_1.Ami.RemoteError(message); },
+                "deserialize": function (message) { return new RemoteError(message); },
                 "isInstance": function (obj) { return obj instanceof Error; },
                 "name": "Error"
             }
@@ -117,7 +127,7 @@ var Message;
                             ami.evtUserEvent.attachOnceExtract(function (_a) {
                                 var actionid = _a.actionid;
                                 return actionid === userEvent.actionid;
-                            });
+                            }, function () { });
                         };
                         try {
                             for (_a = __values(buildUserEvents(message, userevent)), _b = _a.next(); !_b.done; _b = _a.next()) {
@@ -192,18 +202,19 @@ var Message;
     }
     Message.makeEvtMessage = makeEvtMessage;
 })(Message || (Message = {}));
-var requestUserevent = "API_REQUEST_doOOdlP3d";
-var responseUserevent = "API_RESPONSE_aoZksOdd";
-var eventUserevent = "API_EVENT_doeODkOd";
-var AmiApiServer = /** @class */ (function () {
-    function AmiApiServer(ami) {
+var requestUserevent = "API_REQUEST_";
+var responseUserevent = "API_RESPONSE_";
+var eventUserevent = "API_EVENT_";
+var Server = /** @class */ (function () {
+    function Server(ami, apiId) {
         var _this = this;
         this.ami = ami;
+        this.apiId = apiId;
         this.evtRequest = new ts_events_extended_1.SyncEvent();
-        this.sendEvent = Message.makeSendMessage(this.ami, eventUserevent);
-        var sendResponse = Message.makeSendMessage(ami, responseUserevent);
+        this.sendEvent = Message.makeSendMessage(this.ami, "" + eventUserevent + this.apiId);
+        var sendResponse = Message.makeSendMessage(ami, "" + responseUserevent + apiId);
         var resolveOrReject = function (id, payload) { return sendResponse({ id: id, payload: payload }); };
-        Message.makeEvtMessage(ami, requestUserevent).attach(function (_a) {
+        Message.makeEvtMessage(ami, "" + requestUserevent + apiId).attach(function (_a) {
             var id = _a.id, payload = _a.payload;
             return _this.evtRequest.post({
                 "method": payload.method,
@@ -213,28 +224,29 @@ var AmiApiServer = /** @class */ (function () {
             });
         });
     }
-    AmiApiServer.prototype.postEvent = function (name, event) {
+    Server.prototype.postEvent = function (name, event) {
         return this.sendEvent({
             "id": Ami_1.Ami.generateUniqueActionId(),
             "payload": { name: name, event: event }
         });
     };
-    return AmiApiServer;
+    return Server;
 }());
-exports.AmiApiServer = AmiApiServer;
-var AmiApiClient = /** @class */ (function () {
-    function AmiApiClient(ami) {
+exports.Server = Server;
+var Client = /** @class */ (function () {
+    function Client(ami, apiId) {
         var _this = this;
         this.ami = ami;
+        this.apiId = apiId;
         this.evtEvent = new ts_events_extended_1.SyncEvent();
-        this.sendRequest = Message.makeSendMessage(this.ami, requestUserevent);
-        this.evtResponse = Message.makeEvtMessage(this.ami, responseUserevent);
-        Message.makeEvtMessage(ami, eventUserevent).attach(function (_a) {
+        this.sendRequest = Message.makeSendMessage(this.ami, "" + requestUserevent + this.apiId);
+        this.evtResponse = Message.makeEvtMessage(this.ami, "" + responseUserevent + this.apiId);
+        Message.makeEvtMessage(ami, "" + eventUserevent + this.apiId).attach(function (_a) {
             var payload = _a.payload;
             return _this.evtEvent.post(payload);
         });
     }
-    AmiApiClient.prototype.makeRequest = function (method, params, timeout) {
+    Client.prototype.makeRequest = function (method, params, timeout) {
         if (timeout === void 0) { timeout = 5000; }
         return __awaiter(this, void 0, void 0, function () {
             var requestId, payload, _a;
@@ -255,7 +267,7 @@ var AmiApiClient = /** @class */ (function () {
                         return [3 /*break*/, 4];
                     case 3:
                         _a = _b.sent();
-                        throw new Ami_1.Ami.TimeoutError(method, timeout);
+                        throw new TimeoutError(method, timeout);
                     case 4:
                         if (payload instanceof Error) {
                             throw payload;
@@ -268,6 +280,28 @@ var AmiApiClient = /** @class */ (function () {
             });
         });
     };
-    return AmiApiClient;
+    return Client;
 }());
-exports.AmiApiClient = AmiApiClient;
+exports.Client = Client;
+var TimeoutError = /** @class */ (function (_super) {
+    __extends(TimeoutError, _super);
+    function TimeoutError(method, timeout) {
+        var _newTarget = this.constructor;
+        var _this = _super.call(this, "Request " + method + " timed out after " + timeout + " ms") || this;
+        Object.setPrototypeOf(_this, _newTarget.prototype);
+        return _this;
+    }
+    return TimeoutError;
+}(Error));
+exports.TimeoutError = TimeoutError;
+var RemoteError = /** @class */ (function (_super) {
+    __extends(RemoteError, _super);
+    function RemoteError(message) {
+        var _newTarget = this.constructor;
+        var _this = _super.call(this, message) || this;
+        Object.setPrototypeOf(_this, _newTarget.prototype);
+        return _this;
+    }
+    return RemoteError;
+}(Error));
+exports.RemoteError = RemoteError;

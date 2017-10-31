@@ -13,6 +13,6 @@ import * as api from "./api";
 
     await api.start();
 
-    console.log("ALL TEST PASSED");
+    console.log("ALL TEST PASSED...process should terminate");
 
 })();

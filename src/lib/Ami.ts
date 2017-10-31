@@ -1,11 +1,18 @@
-import { SyncEvent } from "ts-events-extended";
+import { SyncEvent, VoidSyncEvent } from "ts-events-extended";
 import * as AstMan from "asterisk-manager";
 import * as c from "./Credential";
 import { b64Split, b64Unsplit, b64Dec, b64Enc, b64crop } from "./textSplit";
-import * as api from "./apiTransport";
+import * as amiApi from "./amiApi";
+import * as agi from "./agi";
 import * as path from "path";
 
-let counter = Date.now();
+const uniqNow= (()=>{
+    let last= 0;
+    return ()=> {
+        let now= Date.now();
+        return (now<=last)?(++last):(last=now);
+    };
+})();
 
 export class Ami {
 
@@ -27,109 +34,206 @@ export class Ami {
 
     }
 
-    public disconnect(): Promise<void> {
+    public static generateUniqueActionId(): string {
+        return `${uniqNow()}`;
+    }
+
+    public async disconnect() {
 
         if( Ami.instance === this ) Ami.instance= undefined;
 
-        return new Promise<void>(
-            resolve => this.connection.disconnect(
-                () => resolve()
-            )
-        );
+        await Promise.all([
+            new Promise( resolve =>this.astManForEvents.disconnect( resolve )),
+            new Promise( resolve =>this.astManForActions.disconnect( resolve ))
+        ]);
 
     }
 
-
-    private _apiServer: api.AmiApiServer | undefined = undefined;
-
-    public get apiServer(): api.AmiApiServer {
-
-        if( this._apiServer ) return this._apiServer;
-
-        this._apiServer= new api.AmiApiServer(this);
-
-        return this._apiServer;
-
+    public createApiServer(apiId: string): amiApi.Server {
+        return new amiApi.Server(this, apiId);
     }
 
-    private _apiClient: api.AmiApiClient | undefined = undefined;
-
-    public get apiClient(): api.AmiApiClient {
-
-        if( this._apiClient ) return this._apiClient;
-
-        this._apiClient= new api.AmiApiClient(this);
-
-        return this._apiClient;
-
+    public createApiClient(apiId: string): amiApi.Client {
+        return new amiApi.Client(this, apiId);
     }
 
-
-
-    public static generateUniqueActionId(): string {
-        return `${counter++}`;
+    public startAgi(
+        scripts: agi.Scripts,
+        defaultScript?: (channel: agi.AGIChannel) => Promise<void>
+    ) {
+        return agi.start(this, scripts, defaultScript);
     }
 
-    public readonly connection: any;
+    public readonly astManForActions;
+    public readonly astManForEvents;
 
     public readonly evt = new SyncEvent<Ami.ManagerEvent>();
     public readonly evtUserEvent = new SyncEvent<Ami.UserEvent>();
 
-    private isFullyBooted = false;
+    private isReady = false;
+    private readonly evtFullyBooted = new VoidSyncEvent();
 
     public readonly credential: Ami.Credential;
 
     constructor(asteriskManagerUser?: string, asteriskConfigRoot?: string);
     constructor(asteriskManagerCredential: Ami.Credential);
-    constructor(...inputs){
+    constructor(...inputs) {
 
         let credential: Ami.Credential;
 
-        if( c.Credential.match(inputs[0]) ){
+        if (c.Credential.match(inputs[0])) {
 
-            credential= inputs[0];
+            credential = inputs[0];
 
-        }else{
+        } else {
 
             let asteriskManagerUser: string | undefined;
             let asteriskConfigRoot: string;
 
-            let [ p1, p2 ]= inputs;
+            let [p1, p2] = inputs;
 
-            if(p1){
-                asteriskManagerUser= p1;
-            }else{
-                asteriskManagerUser= undefined;
+            if (p1) {
+                asteriskManagerUser = p1;
+            } else {
+                asteriskManagerUser = undefined;
             }
 
-            if( p2 ){
-                asteriskConfigRoot= p2;
-            }else{
-                asteriskConfigRoot= path.join("/etc", "asterisk");
+            if (p2) {
+                asteriskConfigRoot = p2;
+            } else {
+                asteriskConfigRoot = path.join("/etc", "asterisk");
             }
 
-            credential= c.Credential.getFromConfigFile(asteriskConfigRoot, asteriskManagerUser);
+            credential = c.Credential.getFromConfigFile(asteriskConfigRoot, asteriskManagerUser);
 
         }
 
-        this.credential= credential;
+        this.credential = credential;
 
         let { port, host, user, secret } = credential;
 
-        this.connection = new AstMan(port, host, user, secret, true);
+        this.astManForEvents = new AstMan(port, host, user, secret, true);
+        this.astManForActions = new AstMan(port, host, user, secret, false);
 
-        this.connection.setMaxListeners(Infinity);
+        this.astManForActions.setMaxListeners(Infinity);
+        this.astManForEvents.setMaxListeners(Infinity);
 
-        this.connection.keepConnected();
+        this.astManForActions.keepConnected();
+        this.astManForActions.keepConnected();
 
-        this.connection.on("managerevent", evt => this.evt.post(evt));
-        this.connection.on("userevent", evt => this.evtUserEvent.post(evt));
-        this.connection.on("fullybooted", () => { this.isFullyBooted = true; });
-        this.connection.on("close", () => { this.isFullyBooted = false; });
+        this.astManForEvents.on("managerevent", data => {
+
+            switch (data.event) {
+                case "FullyBooted":
+                    this.isReady = true;
+                    this.evtFullyBooted.post();
+                    break;
+                case "UserEvent":
+                    this.evtUserEvent.post(data);
+                    break;
+            }
+
+            this.evt.post(data);
+
+        });
+
+        this.astManForEvents.on("close", () => this.isReady = false);
+
+    }
+
+    public get ready(): Promise<void> {
+
+        if (this.isReady) {
+            return Promise.resolve();
+        } else {
+            return this.evtFullyBooted.waitFor()
+        }
 
     }
 
     public lastActionId: string = "";
+    private actionPending: VoidSyncEvent | undefined= undefined;
+
+    public async postAction(
+        action: string,
+        headers: Ami.Headers
+    ) {
+        return this._postAction_(action, headers, false);
+    }
+
+    private async _postAction_(
+        action: string,
+        headers: Ami.Headers,
+        isRecursion: boolean
+    ) {
+
+        let isTemoraryConnection= this.lastActionId === "-1";
+
+        if (!headers.actionid) {
+            headers.actionid = Ami.generateUniqueActionId();
+        }
+
+        this.lastActionId = headers.actionid as string;
+
+        if (!this.isReady) await this.ready;
+
+        if( !isRecursion && action.toLowerCase() === "originate" ){
+            return this.postActionOnNewConnection(action, headers);
+        }
+
+        while( this.actionPending ){
+
+            try{
+
+                await this.actionPending.waitFor(1500);
+
+            } catch{
+
+                return this.postActionOnNewConnection(action, headers);
+
+            }
+
+        }
+
+        this.actionPending = new VoidSyncEvent();
+
+        if (!this.isReady) await this.ready;
+
+        return await new Promise<any>(
+            async (resolve, reject) => this.astManForActions.action(
+                { ...headers, action },
+                (error, res) => {
+
+                    this.actionPending!.post();
+                    this.actionPending = undefined;
+
+                    if (error) {
+                        reject(new Ami.ActionError(action, headers, error));
+                    } else {
+                        resolve(res);
+                    }
+
+                }
+            )
+        );
+    }
+
+    private postActionOnNewConnection(
+        action: string,
+        headers: Ami.Headers
+    ): Promise<any> {
+
+        let tmpAmi = new Ami(this.credential);
+
+        let prAction = tmpAmi._postAction_(action, headers, true);
+
+        prAction
+            .then(() => tmpAmi.disconnect())
+            .catch(() => tmpAmi.disconnect());
+
+        return prAction;
+
+    }
 
     public async userEvent(userEvent: {
         userevent: Ami.UserEvent['userevent'],
@@ -139,41 +243,15 @@ export class Ami {
 
         let action: any = { ...userEvent };
 
-        for (let key of Object.keys(action))
-            if (action[key] === undefined)
-                delete action[key];
+        for (let key in action){
+
+            if (action[key] === undefined) delete action[key];
+
+        }
 
         await this.postAction("UserEvent", action);
 
     };
-
-
-    public postAction(
-        action: string,
-        headers: Ami.Headers
-    ): Promise<any> {
-
-        return new Promise<any>(async (resolve, reject) => {
-
-            if (!headers.actionid){
-                headers.actionid = Ami.generateUniqueActionId();
-            }
-
-            this.lastActionId = headers.actionid as string;
-
-            if (!this.isFullyBooted)
-                await new Promise<void>(
-                    resolve => this.connection.once("fullybooted", () => resolve())
-                );
-
-            this.connection.action(
-                { ...headers, action },
-                (error, res) => error ? reject(error) : resolve(res)
-            );
-
-        });
-
-    }
 
     public async messageSend(
         to: string,
@@ -188,8 +266,6 @@ export class Ami {
         );
 
     }
-
-
 
     public async setVar(
         variable: string,
@@ -218,9 +294,6 @@ export class Ami {
 
     }
 
-
-
-
     public async dialplanExtensionAdd(
         context: string,
         extension: string,
@@ -243,8 +316,31 @@ export class Ami {
 
         let res = await this.postAction("DialplanExtensionAdd", headers);
 
+    }
+
+    /** e.g call with ( "from-sip", "_[+0-9].", [ [ "NoOp", "FOO"], [ "Hangup" ] ] ) */
+    public async dialplanAddSetOfExtentions(
+        context: string,
+        extension: string,
+        instructionSet: ([ string ]|[ string,string ])[]
+    ) {
+
+        await this.dialplanExtensionRemove(context, extension);
+
+        let priority= 1;
+        
+        for( let instruction of instructionSet ){
+
+            let application= instruction[0];
+            let applicationData= instruction[1];
+
+            await this.dialplanExtensionAdd(context, extension, priority++, application, applicationData);
+
+        }
 
     }
+
+
 
     public async runCliCommand(cliCommand: string): Promise<string> {
 
@@ -272,12 +368,12 @@ export class Ami {
 
     }
 
+    /** return true if extention removed */
     public async dialplanExtensionRemove(
         context: string,
         extension: string,
         priority?: number | string
     ): Promise<boolean> {
-
 
         let headers: Record<string, string> = { context, extension };
 
@@ -293,7 +389,6 @@ export class Ami {
 
             return false;
         }
-
 
     }
 
@@ -318,13 +413,11 @@ export class Ami {
             "variable": channelVariables
         };
 
-        let newInstance = new Ami(this.credential);
-
         let answered: boolean;
 
         try {
 
-            await newInstance.postAction("originate", headers);
+            await this.postAction("Originate", headers);
 
             answered = true;
 
@@ -334,8 +427,6 @@ export class Ami {
 
         }
 
-        await newInstance.disconnect();
-
         return answered;
 
     }
@@ -344,7 +435,7 @@ export class Ami {
 
 export namespace Ami {
 
-    export type Credential= c.Credential;
+    export type Credential = c.Credential;
 
     export type ManagerEvent = {
         event: string;
@@ -360,30 +451,28 @@ export namespace Ami {
 
     export type Headers = Record<string, string | Record<string, string> | string[]>;
 
-    export class TimeoutError extends Error {
-        constructor(method: string, timeout: number) {
-            super(`Request ${method} timed out after ${timeout} ms`);
-            Object.setPrototypeOf(this, new.target.prototype);
-        }
-    }
-
-    export class RemoteError extends Error {
-        constructor(message: string) {
-            super(message);
-            Object.setPrototypeOf(this, new.target.prototype);
-        }
-    }
-
 
     export const asteriskBufferSize = 1024;
-    export const headerValueMaxLength = (asteriskBufferSize - 1) - ("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n").length;
+    export const headerValueMaxLength =
+        (asteriskBufferSize - 1) - ("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n").length;
 
-    export const b64= {
-        "split": (text: string)=> b64Split(headerValueMaxLength, text),
+    export const b64 = {
+        "split": (text: string) => b64Split(headerValueMaxLength, text),
         "unsplit": b64Unsplit,
         "enc": b64Enc,
         "dec": b64Dec,
-        "crop": (text: string)=> b64crop(headerValueMaxLength, text)
+        "crop": (text: string) => b64crop(headerValueMaxLength, text)
+    }
+
+    export class ActionError extends Error {
+        constructor(
+            public readonly action: string,
+            public readonly headers: Ami.Headers,
+            public readonly asteriskResponse
+        ) {
+            super(`Asterisk manager error with action ${action}`);
+            Object.setPrototypeOf(this, new.target.prototype);
+        }
     }
 
 }

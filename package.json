@@ -1,7 +1,7 @@
 {
   "name": "ts-ami",
-  "version": "2.0.1",
-  "description": "Asterisk AMI client for TypeScript",
+  "version": "3.0.0",
+  "description": "Asterisk AMI client for TypeScript, also implement async AGI",
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
   "scripts": {
@@ -25,6 +25,7 @@
     "rejection-tracker": "garronej/rejection-tracker",
     "super-json": "^2.2.0",
     "timer-extended": "github:garronej/timer-extended",
+    "ts-async-agi": "github:garronej/ts-async-agi",
     "ts-events-extended": "garronej/ts-events-extended"
   },
   "devDependencies": {
