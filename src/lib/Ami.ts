@@ -119,7 +119,7 @@ export class Ami {
         this.astManForEvents.setMaxListeners(Infinity);
 
         this.astManForActions.keepConnected();
-        this.astManForActions.keepConnected();
+        this.astManForEvents.keepConnected();
 
         this.astManForEvents.on("managerevent", data => {
 

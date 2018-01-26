@@ -135,7 +135,7 @@ var Ami = /** @class */ (function () {
         this.astManForActions.setMaxListeners(Infinity);
         this.astManForEvents.setMaxListeners(Infinity);
         this.astManForActions.keepConnected();
-        this.astManForActions.keepConnected();
+        this.astManForEvents.keepConnected();
         this.astManForEvents.on("managerevent", function (data) {
             switch (data.event) {
                 case "FullyBooted":
