@@ -37,7 +37,7 @@ export declare class Ami {
     getVar(variable: string, channel?: string): Promise<string>;
     dialplanExtensionAdd(context: string, extension: string, priority: number | string, application: string, applicationData?: string, replace?: boolean): Promise<void>;
     /** e.g call with ( "from-sip", "_[+0-9].", [ [ "NoOp", "FOO"], [ "Hangup" ] ] ) */
-    dialplanAddSetOfExtentions(context: string, extension: string, instructionSet: ([string] | [string, string])[]): Promise<void>;
+    dialplanAddSetOfExtensions(context: string, extension: string, instructionSet: ([string] | [string, string])[]): Promise<void>;
     runCliCommand(cliCommand: string): Promise<string>;
     /** return true if extention removed */
     dialplanExtensionRemove(context: string, extension: string, priority?: number | string): Promise<boolean>;
@@ -59,13 +59,6 @@ export declare namespace Ami {
     type Headers = Record<string, string | Record<string, string> | string[]>;
     const asteriskBufferSize = 1024;
     const headerValueMaxLength: number;
-    const b64: {
-        "split": (text: string) => string[];
-        "unsplit": (encodedParts: string[]) => string;
-        "enc": (str: string) => string;
-        "dec": (enc: string) => string;
-        "crop": (text: string) => string;
-    };
     class ActionError extends Error {
         readonly action: string;
         readonly headers: Ami.Headers;

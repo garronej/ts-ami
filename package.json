@@ -23,13 +23,13 @@
     "asterisk-manager": "^0.1.16",
     "ini-extended": "garronej/ini-extended",
     "rejection-tracker": "garronej/rejection-tracker",
-    "super-json": "^2.2.0",
     "timer-extended": "github:garronej/timer-extended",
     "ts-async-agi": "github:garronej/ts-async-agi",
-    "ts-events-extended": "garronej/ts-events-extended"
+    "ts-events-extended": "garronej/ts-events-extended",
+    "transfer-tools": "garronej/transfer-tools"
   },
   "devDependencies": {
-    "@types/node": "^4.2.2",
-    "typescript": "^2.5.3"
+    "@types/node": "^9.4.2",
+    "typescript": "^2.7.1"
   }
 }

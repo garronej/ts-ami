@@ -132,7 +132,7 @@ function initDialplan(scripts, ami) {
                 case 2:
                     if (!(_e < _c.length)) return [3 /*break*/, 5];
                     extensionPattern = _c[_e];
-                    return [4 /*yield*/, ami.dialplanAddSetOfExtentions(context, extensionPattern, [
+                    return [4 /*yield*/, ami.dialplanAddSetOfExtensions(context, extensionPattern, [
                             ["Set", "EXTENSION_PATTERN=" + extensionPattern],
                             ["AGI", "agi:async"],
                             ["Hangup"]

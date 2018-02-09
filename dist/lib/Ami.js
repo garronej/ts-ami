@@ -82,10 +82,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var ts_events_extended_1 = require("ts-events-extended");
 var AstMan = require("asterisk-manager");
 var c = require("./Credential");
-var textSplit_1 = require("./textSplit");
 var amiApi = require("./amiApi");
 var agi = require("./agi");
 var path = require("path");
+var tt = require("transfer-tools");
 var uniqNow = (function () {
     var last = 0;
     return function () {
@@ -311,7 +311,12 @@ var Ami = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.postAction("MessageSend", { to: to, from: from, "variable": packetHeaders || {}, "base64body": textSplit_1.b64Enc(body) })];
+                    case 0: return [4 /*yield*/, this.postAction("MessageSend", {
+                            to: to,
+                            from: from,
+                            "variable": packetHeaders || {},
+                            "base64body": tt.stringTransform.safeBufferFromTo(body, "utf8", "base64")
+                        })];
                     case 1:
                         _a.sent();
                         return [2 /*return*/];
@@ -376,7 +381,7 @@ var Ami = /** @class */ (function () {
         });
     };
     /** e.g call with ( "from-sip", "_[+0-9].", [ [ "NoOp", "FOO"], [ "Hangup" ] ] ) */
-    Ami.prototype.dialplanAddSetOfExtentions = function (context, extension, instructionSet) {
+    Ami.prototype.dialplanAddSetOfExtensions = function (context, extension, instructionSet) {
         return __awaiter(this, void 0, void 0, function () {
             var priority, instructionSet_1, instructionSet_1_1, instruction, application, applicationData, e_1_1, e_1, _a;
             return __generator(this, function (_b) {
@@ -517,13 +522,6 @@ exports.Ami = Ami;
 (function (Ami) {
     Ami.asteriskBufferSize = 1024;
     Ami.headerValueMaxLength = (Ami.asteriskBufferSize - 1) - ("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n").length;
-    Ami.b64 = {
-        "split": function (text) { return textSplit_1.b64Split(Ami.headerValueMaxLength, text); },
-        "unsplit": textSplit_1.b64Unsplit,
-        "enc": textSplit_1.b64Enc,
-        "dec": textSplit_1.b64Dec,
-        "crop": function (text) { return textSplit_1.b64crop(Ami.headerValueMaxLength, text); }
-    };
     var ActionError = /** @class */ (function (_super) {
         __extends(ActionError, _super);
         function ActionError(action, headers, asteriskResponse) {

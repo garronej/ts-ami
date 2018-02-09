@@ -1,50 +1,22 @@
 import { SyncEvent } from "ts-events-extended";
 import { Ami } from "./Ami";
-import UserEvent= Ami.UserEvent;
-import { textSplit, b64Enc, b64Dec } from "./textSplit";
+import UserEvent = Ami.UserEvent;
 import { setTimer } from "timer-extended";
-import * as superJson from "super-json";
+import * as tt from "transfer-tools";
 
-namespace JSON {
-    const myJson = superJson.create({
-        "magic": '#!',
-        "serializers": [
-            superJson.dateSerializer,
-            {
-                "serialize": error => [error.message],
-                "deserialize": message => new RemoteError(message),
-                "isInstance": obj => obj instanceof Error,
-                "name": "Error"
-            }
-        ]
-    });
-
-    export function stringify(obj: any): string {
-
-        if (obj === undefined) {
-            return "undefined";
-        }
-
-        return myJson.stringify([obj]);
-
-    }
-
-    export function parse(str: string): any {
-
-        if (str === "undefined") {
-            return undefined;
-        }
-
-        return myJson.parse(str).pop();
-    }
-
-}
-
+const JSON_CUSTOM = tt.JSON_CUSTOM.get([{
+    "serialize": error => [error.message],
+    "deserialize": message => new RemoteError(message),
+    "isInstance": obj => obj instanceof Error,
+    "name": "Error"
+} as tt.JSON_CUSTOM.Serializer<Error>]);
 
 interface Message {
     id: string,
     payload: any
 }
+
+const b64= tt.stringTransform.transcode("base64");
 
 namespace Message {
 
@@ -60,7 +32,14 @@ namespace Message {
 
         let { id, payload } = message;
 
-        let packets = textSplit(50000, b64Enc(JSON.stringify(payload)));
+        let packets= tt.stringTransform.textSplit(
+            50000, 
+            b64.enc( 
+                JSON_CUSTOM.stringify(
+                    payload 
+                ) 
+            ) 
+        );
 
         let userEvents: UserEvent[] = [];
 
@@ -74,7 +53,10 @@ namespace Message {
 
             userEvent[packetIndexKey] = `${i}`;
 
-            let parts = textSplit(Ami.headerValueMaxLength, packets[i]);
+            let parts = tt.stringTransform.textSplit( 
+                Ami.headerValueMaxLength, 
+                packets[i] 
+            );
 
             userEvent[partCountKey] = `${parts.length}`;
 
@@ -107,8 +89,8 @@ namespace Message {
                 tasks.push(ami.userEvent(userEvent));
 
                 ami.evtUserEvent.attachOnceExtract(
-                    ({ actionid }) => actionid === userEvent.actionid, 
-                    ()=>{}
+                    ({ actionid }) => actionid === userEvent.actionid,
+                    () => { }
                 );
 
             }
@@ -120,8 +102,6 @@ namespace Message {
     }
 
     function parseUserEvents(userEvents: UserEvent[]): Message {
-
-        let { userevent } = userEvents[0];
 
         let id = userEvents[0][messageIdKey]!;
 
@@ -140,7 +120,11 @@ namespace Message {
 
         }
 
-        let payload = JSON.parse(b64Dec(payloadEnc));
+        let payload = JSON_CUSTOM.parse(
+            b64.dec(
+                payloadEnc
+            )
+        );
 
         return { id, payload };
 
@@ -217,13 +201,13 @@ export class Server {
     }>();
 
     constructor(
-        public readonly ami: Ami, 
+        public readonly ami: Ami,
         private readonly apiId: string
     ) {
 
         let sendResponse = Message.makeSendMessage(ami, `${responseUserevent}${apiId}`);
 
-        let resolveOrReject= (id: string, payload: any)=> sendResponse({ id, payload });
+        let resolveOrReject = (id: string, payload: any) => sendResponse({ id, payload });
 
         Message.makeEvtMessage(ami, `${requestUserevent}${apiId}`).attach(
             ({ id, payload }) => this.evtRequest.post({
@@ -268,9 +252,9 @@ export class Client {
     private readonly evtResponse = Message.makeEvtMessage(this.ami, `${responseUserevent}${this.apiId}`);
 
     public async makeRequest(
-        method: string, 
-        params?: any, 
-        timeout: number= 5000
+        method: string,
+        params?: any,
+        timeout: number = 5000
     ) {
 
         let requestId = Ami.generateUniqueActionId();

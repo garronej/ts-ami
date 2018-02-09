@@ -1,22 +1,22 @@
 import { SyncEvent, VoidSyncEvent } from "ts-events-extended";
 import * as AstMan from "asterisk-manager";
 import * as c from "./Credential";
-import { b64Split, b64Unsplit, b64Dec, b64Enc, b64crop } from "./textSplit";
 import * as amiApi from "./amiApi";
 import * as agi from "./agi";
 import * as path from "path";
+import * as tt from "transfer-tools";
 
-const uniqNow= (()=>{
-    let last= 0;
-    return ()=> {
-        let now= Date.now();
-        return (now<=last)?(++last):(last=now);
+const uniqNow = (() => {
+    let last = 0;
+    return () => {
+        let now = Date.now();
+        return (now <= last) ? (++last) : (last = now);
     };
 })();
 
 export class Ami {
 
-    private static instance: Ami | undefined= undefined;
+    private static instance: Ami | undefined = undefined;
 
     public static get hasInstance(): boolean {
         return !!this.instance;
@@ -24,11 +24,11 @@ export class Ami {
 
     public static getInstance(asteriskManagerUser?: string, asteriskConfigRoot?: string): Ami;
     public static getInstance(asteriskManagerCredential: c.Credential): Ami;
-    public static getInstance(...inputs){
+    public static getInstance(...inputs) {
 
-        if( this.instance ) return this.instance;
+        if (this.instance) return this.instance;
 
-        this.instance= new this(inputs[0], inputs[1]);
+        this.instance = new this(inputs[0], inputs[1]);
 
         return this.instance;
 
@@ -40,11 +40,11 @@ export class Ami {
 
     public async disconnect() {
 
-        if( Ami.instance === this ) Ami.instance= undefined;
+        if (Ami.instance === this) Ami.instance = undefined;
 
         await Promise.all([
-            new Promise( resolve =>this.astManForEvents.disconnect( resolve )),
-            new Promise( resolve =>this.astManForActions.disconnect( resolve ))
+            new Promise(resolve => this.astManForEvents.disconnect(resolve)),
+            new Promise(resolve => this.astManForActions.disconnect(resolve))
         ]);
 
     }
@@ -152,7 +152,7 @@ export class Ami {
     }
 
     public lastActionId: string = "";
-    private actionPending: VoidSyncEvent | undefined= undefined;
+    private actionPending: VoidSyncEvent | undefined = undefined;
 
     public async postAction(
         action: string,
@@ -167,7 +167,7 @@ export class Ami {
         isRecursion: boolean
     ) {
 
-        let isTemoraryConnection= this.lastActionId === "-1";
+        let isTemoraryConnection = this.lastActionId === "-1";
 
         if (!headers.actionid) {
             headers.actionid = Ami.generateUniqueActionId();
@@ -177,13 +177,13 @@ export class Ami {
 
         if (!this.isReady) await this.ready;
 
-        if( !isRecursion && action.toLowerCase() === "originate" ){
+        if (!isRecursion && action.toLowerCase() === "originate") {
             return this.postActionOnNewConnection(action, headers);
         }
 
-        while( this.actionPending ){
+        while (this.actionPending) {
 
-            try{
+            try {
 
                 await this.actionPending.waitFor(1500);
 
@@ -243,7 +243,7 @@ export class Ami {
 
         let action: any = { ...userEvent };
 
-        for (let key in action){
+        for (let key in action) {
 
             if (action[key] === undefined) delete action[key];
 
@@ -262,7 +262,14 @@ export class Ami {
 
         await this.postAction(
             "MessageSend",
-            { to, from, "variable": packetHeaders || {}, "base64body": b64Enc(body) }
+            {
+                to,
+                from,
+                "variable": packetHeaders || {},
+                "base64body": tt.stringTransform.safeBufferFromTo(
+                    body, "utf8", "base64"
+                )
+            }
         );
 
     }
@@ -319,20 +326,20 @@ export class Ami {
     }
 
     /** e.g call with ( "from-sip", "_[+0-9].", [ [ "NoOp", "FOO"], [ "Hangup" ] ] ) */
-    public async dialplanAddSetOfExtentions(
+    public async dialplanAddSetOfExtensions(
         context: string,
         extension: string,
-        instructionSet: ([ string ]|[ string,string ])[]
+        instructionSet: ([string] | [string, string])[]
     ) {
 
         await this.dialplanExtensionRemove(context, extension);
 
-        let priority= 1;
-        
-        for( let instruction of instructionSet ){
+        let priority = 1;
 
-            let application= instruction[0];
-            let applicationData= instruction[1];
+        for (let instruction of instructionSet) {
+
+            let application = instruction[0];
+            let applicationData = instruction[1];
 
             await this.dialplanExtensionAdd(context, extension, priority++, application, applicationData);
 
@@ -451,18 +458,9 @@ export namespace Ami {
 
     export type Headers = Record<string, string | Record<string, string> | string[]>;
 
-
     export const asteriskBufferSize = 1024;
     export const headerValueMaxLength =
         (asteriskBufferSize - 1) - ("Variable: A_VERY_LONG_VARIABLE_NAME_TO_BE_REALLY_SAFE=" + "\r\n").length;
-
-    export const b64 = {
-        "split": (text: string) => b64Split(headerValueMaxLength, text),
-        "unsplit": b64Unsplit,
-        "enc": b64Enc,
-        "dec": b64Dec,
-        "crop": (text: string) => b64crop(headerValueMaxLength, text)
-    }
 
     export class ActionError extends Error {
         constructor(

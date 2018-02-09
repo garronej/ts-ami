@@ -57,38 +57,15 @@ var __values = (this && this.__values) || function (o) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts_events_extended_1 = require("ts-events-extended");
 var Ami_1 = require("./Ami");
-var textSplit_1 = require("./textSplit");
 var timer_extended_1 = require("timer-extended");
-var superJson = require("super-json");
-var JSON;
-(function (JSON) {
-    var myJson = superJson.create({
-        "magic": '#!',
-        "serializers": [
-            superJson.dateSerializer,
-            {
-                "serialize": function (error) { return [error.message]; },
-                "deserialize": function (message) { return new RemoteError(message); },
-                "isInstance": function (obj) { return obj instanceof Error; },
-                "name": "Error"
-            }
-        ]
-    });
-    function stringify(obj) {
-        if (obj === undefined) {
-            return "undefined";
-        }
-        return myJson.stringify([obj]);
-    }
-    JSON.stringify = stringify;
-    function parse(str) {
-        if (str === "undefined") {
-            return undefined;
-        }
-        return myJson.parse(str).pop();
-    }
-    JSON.parse = parse;
-})(JSON || (JSON = {}));
+var tt = require("transfer-tools");
+var JSON_CUSTOM = tt.JSON_CUSTOM.get([{
+        "serialize": function (error) { return [error.message]; },
+        "deserialize": function (message) { return new RemoteError(message); },
+        "isInstance": function (obj) { return obj instanceof Error; },
+        "name": "Error"
+    }]);
+var b64 = tt.stringTransform.transcode("base64");
 var Message;
 (function (Message) {
     var packetCountKey = "packet_count";
@@ -98,14 +75,14 @@ var Message;
     var messageIdKey = "message_id";
     function buildUserEvents(message, userevent) {
         var id = message.id, payload = message.payload;
-        var packets = textSplit_1.textSplit(50000, textSplit_1.b64Enc(JSON.stringify(payload)));
+        var packets = tt.stringTransform.textSplit(50000, b64.enc(JSON_CUSTOM.stringify(payload)));
         var userEvents = [];
         for (var i = 0; i < packets.length; i++) {
             var userEvent = { userevent: userevent, "actionid": Ami_1.Ami.generateUniqueActionId() };
             userEvent[messageIdKey] = id;
             userEvent[packetCountKey] = "" + packets.length;
             userEvent[packetIndexKey] = "" + i;
-            var parts = textSplit_1.textSplit(Ami_1.Ami.headerValueMaxLength, packets[i]);
+            var parts = tt.stringTransform.textSplit(Ami_1.Ami.headerValueMaxLength, packets[i]);
             userEvent[partCountKey] = "" + parts.length;
             for (var j = 0; j < parts.length; j++) {
                 userEvent[partKey(j)] = parts[j];
@@ -152,7 +129,6 @@ var Message;
     }
     Message.makeSendMessage = makeSendMessage;
     function parseUserEvents(userEvents) {
-        var userevent = userEvents[0].userevent;
         var id = userEvents[0][messageIdKey];
         var payloadEnc = "";
         try {
@@ -172,7 +148,7 @@ var Message;
             }
             finally { if (e_2) throw e_2.error; }
         }
-        var payload = JSON.parse(textSplit_1.b64Dec(payloadEnc));
+        var payload = JSON_CUSTOM.parse(b64.dec(payloadEnc));
         return { id: id, payload: payload };
         var e_2, _a;
     }

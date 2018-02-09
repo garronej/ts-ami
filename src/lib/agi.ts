@@ -93,7 +93,7 @@ async function initDialplan(scripts: Scripts, ami: Ami) {
 
         for (let extensionPattern in scripts[context]) {
 
-            await ami.dialplanAddSetOfExtentions(context, extensionPattern, [
+            await ami.dialplanAddSetOfExtensions(context, extensionPattern, [
                 ["Set", `EXTENSION_PATTERN=${extensionPattern}`],
                 ["AGI", "agi:async"],
                 ["Hangup"]
