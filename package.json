@@ -1,6 +1,6 @@
 {
   "name": "ts-ami",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Asterisk AMI client for TypeScript, also implement async AGI",
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
@@ -30,6 +30,6 @@
   },
   "devDependencies": {
     "@types/node": "^9.4.2",
-    "typescript": "^2.7.1"
+    "typescript": "2.7.1"
   }
 }
