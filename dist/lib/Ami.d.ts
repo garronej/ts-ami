@@ -1,4 +1,4 @@
-import { SyncEvent } from "ts-events-extended";
+import { SyncEvent, VoidSyncEvent } from "ts-events-extended";
 import * as c from "./Credential";
 import * as amiApi from "./amiApi";
 import * as agi from "./agi";
@@ -16,6 +16,12 @@ export declare class Ami {
     readonly astManForEvents: any;
     readonly evt: SyncEvent<Ami.ManagerEvent>;
     readonly evtUserEvent: SyncEvent<Ami.UserEvent>;
+    /**
+     * Posted when TCP connection with asterisk is lost.
+     * Note that we will attempt to recover the connection
+     * automatically.
+     * */
+    readonly evtTcpConnectionClosed: VoidSyncEvent;
     private isReady;
     private readonly evtFullyBooted;
     readonly credential: Ami.Credential;
@@ -39,7 +45,7 @@ export declare class Ami {
     /** e.g call with ( "from-sip", "_[+0-9].", [ [ "NoOp", "FOO"], [ "Hangup" ] ] ) */
     dialplanAddSetOfExtensions(context: string, extension: string, instructionSet: ([string] | [string, string])[]): Promise<void>;
     runCliCommand(cliCommand: string): Promise<string>;
-    /** return true if extention removed */
+    /** return true if extension removed */
     dialplanExtensionRemove(context: string, extension: string, priority?: number | string): Promise<boolean>;
     removeContext(context: string): Promise<string>;
     originateLocalChannel(context: string, extension: string, channelVariables?: Record<string, string>): Promise<boolean>;

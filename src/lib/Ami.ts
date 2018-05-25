@@ -70,6 +70,13 @@ export class Ami {
     public readonly evt = new SyncEvent<Ami.ManagerEvent>();
     public readonly evtUserEvent = new SyncEvent<Ami.UserEvent>();
 
+    /** 
+     * Posted when TCP connection with asterisk is lost.
+     * Note that we will attempt to recover the connection
+     * automatically.
+     * */
+    public readonly evtTcpConnectionClosed = new VoidSyncEvent();
+
     private isReady = false;
     private readonly evtFullyBooted = new VoidSyncEvent();
 
@@ -137,7 +144,13 @@ export class Ami {
 
         });
 
-        this.astManForEvents.on("close", () => this.isReady = false);
+        this.astManForEvents.on("close", () => { 
+
+            this.isReady = false
+
+            this.evtTcpConnectionClosed.post();
+
+        });
 
     }
 
@@ -167,7 +180,7 @@ export class Ami {
         isRecursion: boolean
     ) {
 
-        let isTemoraryConnection = this.lastActionId === "-1";
+        let isTemporaryConnection = this.lastActionId === "-1";
 
         if (!headers.actionid) {
             headers.actionid = Ami.generateUniqueActionId();
@@ -375,7 +388,7 @@ export class Ami {
 
     }
 
-    /** return true if extention removed */
+    /** return true if extension removed */
     public async dialplanExtensionRemove(
         context: string,
         extension: string,

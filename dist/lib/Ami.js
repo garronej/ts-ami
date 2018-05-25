@@ -102,6 +102,12 @@ var Ami = /** @class */ (function () {
         var _this = this;
         this.evt = new ts_events_extended_1.SyncEvent();
         this.evtUserEvent = new ts_events_extended_1.SyncEvent();
+        /**
+         * Posted when TCP connection with asterisk is lost.
+         * Note that we will attempt to recover the connection
+         * automatically.
+         * */
+        this.evtTcpConnectionClosed = new ts_events_extended_1.VoidSyncEvent();
         this.isReady = false;
         this.evtFullyBooted = new ts_events_extended_1.VoidSyncEvent();
         this.lastActionId = "";
@@ -148,7 +154,10 @@ var Ami = /** @class */ (function () {
             }
             _this.evt.post(data);
         });
-        this.astManForEvents.on("close", function () { return _this.isReady = false; });
+        this.astManForEvents.on("close", function () {
+            _this.isReady = false;
+            _this.evtTcpConnectionClosed.post();
+        });
     }
     Object.defineProperty(Ami, "hasInstance", {
         get: function () {
@@ -220,11 +229,11 @@ var Ami = /** @class */ (function () {
     Ami.prototype._postAction_ = function (action, headers, isRecursion) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            var isTemoraryConnection, _a;
+            var isTemporaryConnection, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        isTemoraryConnection = this.lastActionId === "-1";
+                        isTemporaryConnection = this.lastActionId === "-1";
                         if (!headers.actionid) {
                             headers.actionid = Ami.generateUniqueActionId();
                         }
@@ -450,7 +459,7 @@ var Ami = /** @class */ (function () {
             });
         });
     };
-    /** return true if extention removed */
+    /** return true if extension removed */
     Ami.prototype.dialplanExtensionRemove = function (context, extension, priority) {
         return __awaiter(this, void 0, void 0, function () {
             var headers, error_1;
