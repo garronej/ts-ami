@@ -1,4 +1,4 @@
-require("rejection-tracker").main(__dirname, "..", "..");
+process.once("unhandledRejection", error => { throw error; });
 
 import * as credential from  "./credential"
 import * as ami from "./ami";

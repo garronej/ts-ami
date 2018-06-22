@@ -5,6 +5,7 @@ import * as amiApi from "./amiApi";
 import * as agi from "./agi";
 import * as path from "path";
 import * as tt from "transfer-tools";
+import * as util from "util";
 
 const uniqNow = (() => {
     let last = 0;
@@ -481,7 +482,7 @@ export namespace Ami {
             public readonly headers: Ami.Headers,
             public readonly asteriskResponse
         ) {
-            super(`Asterisk manager error with action ${action}`);
+            super(`Asterisk manager error with action: '${action}', ${util.format(asteriskResponse)}`);
             Object.setPrototypeOf(this, new.target.prototype);
         }
     }

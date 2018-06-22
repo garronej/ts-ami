@@ -86,6 +86,7 @@ var amiApi = require("./amiApi");
 var agi = require("./agi");
 var path = require("path");
 var tt = require("transfer-tools");
+var util = require("util");
 var uniqNow = (function () {
     var last = 0;
     return function () {
@@ -535,7 +536,7 @@ exports.Ami = Ami;
         __extends(ActionError, _super);
         function ActionError(action, headers, asteriskResponse) {
             var _newTarget = this.constructor;
-            var _this = _super.call(this, "Asterisk manager error with action " + action) || this;
+            var _this = _super.call(this, "Asterisk manager error with action: '" + action + "', " + util.format(asteriskResponse)) || this;
             _this.action = action;
             _this.headers = headers;
             _this.asteriskResponse = asteriskResponse;
