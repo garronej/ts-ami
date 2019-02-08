@@ -2,8 +2,7 @@ import { Ami } from "./Ami";
 
 import {
     AsyncAGIServer,
-    AGIChannel as _AGIChannel_,
-    ChannelStatus,
+    AGIChannel as _AGIChannel_
 } from "ts-async-agi";
 
 export type AGIChannel = _AGIChannel_;
@@ -24,7 +23,8 @@ let outboundHandlers: {
 export async function start(
     ami: Ami,
     scripts: Scripts,
-    defaultScript?: (channel: AGIChannel) => Promise<void>
+    defaultScript?: (channel: AGIChannel) => Promise<void>,
+    onError?: (severity: "ERROR" | "WARNING", message: string, error: Error )=> void
 ) {
 
     await initDialplan(scripts, ami);
@@ -49,7 +49,7 @@ export async function start(
         }
     };
 
-    new AsyncAGIServer(async (channel) => {
+    const asyncAGIServer = new AsyncAGIServer(async (channel) => {
 
         let { context, threadid } = channel.request;
 
@@ -84,6 +84,10 @@ export async function start(
         //We call specific script
 
     }, astManImpl);
+
+    if( !!onError ){
+        asyncAGIServer.setErrorHandler(onError);
+    }
 
 }
 

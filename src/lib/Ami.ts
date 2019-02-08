@@ -60,9 +60,10 @@ export class Ami {
 
     public startAgi(
         scripts: agi.Scripts,
-        defaultScript?: (channel: agi.AGIChannel) => Promise<void>
+        defaultScript?: (channel: agi.AGIChannel) => Promise<void>,
+        onError?: (severity: "ERROR" | "WARNING", message: string, error: Error) => void
     ) {
-        return agi.start(this, scripts, defaultScript);
+        return agi.start(this, scripts, defaultScript, onError);
     }
 
     public readonly astManForActions;

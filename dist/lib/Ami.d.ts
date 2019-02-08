@@ -11,7 +11,7 @@ export declare class Ami {
     disconnect(): Promise<void>;
     createApiServer(apiId: string): amiApi.Server;
     createApiClient(apiId: string): amiApi.Client;
-    startAgi(scripts: agi.Scripts, defaultScript?: (channel: agi.AGIChannel) => Promise<void>): Promise<void>;
+    startAgi(scripts: agi.Scripts, defaultScript?: (channel: agi.AGIChannel) => Promise<void>, onError?: (severity: "ERROR" | "WARNING", message: string, error: Error) => void): Promise<void>;
     readonly astManForActions: any;
     readonly astManForEvents: any;
     readonly evt: SyncEvent<Ami.ManagerEvent>;
@@ -31,8 +31,8 @@ export declare class Ami {
     lastActionId: string;
     private actionPending;
     postAction(action: string, headers: Ami.Headers): Promise<any>;
-    private _postAction_(action, headers, isRecursion);
-    private postActionOnNewConnection(action, headers);
+    private _postAction_;
+    private postActionOnNewConnection;
     userEvent(userEvent: {
         userevent: Ami.UserEvent['userevent'];
         actionid?: Ami.UserEvent['actionid'];

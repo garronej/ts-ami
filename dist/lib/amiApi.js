@@ -1,8 +1,11 @@
 "use strict";
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -24,8 +27,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -94,7 +97,7 @@ var Message;
     function makeSendMessage(ami, userevent) {
         var _this = this;
         return function (message) { return __awaiter(_this, void 0, void 0, function () {
-            var tasks, _loop_1, _a, _b, userEvent, e_1, _c;
+            var e_1, _a, tasks, _loop_1, _b, _c, userEvent;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
@@ -107,15 +110,15 @@ var Message;
                             }, function () { });
                         };
                         try {
-                            for (_a = __values(buildUserEvents(message, userevent)), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                userEvent = _b.value;
+                            for (_b = __values(buildUserEvents(message, userevent)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                userEvent = _c.value;
                                 _loop_1(userEvent);
                             }
                         }
                         catch (e_1_1) { e_1 = { error: e_1_1 }; }
                         finally {
                             try {
-                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                             }
                             finally { if (e_1) throw e_1.error; }
                         }
@@ -129,6 +132,7 @@ var Message;
     }
     Message.makeSendMessage = makeSendMessage;
     function parseUserEvents(userEvents) {
+        var e_2, _a;
         var id = userEvents[0][messageIdKey];
         var payloadEnc = "";
         try {
@@ -150,7 +154,6 @@ var Message;
         }
         var payload = JSON_CUSTOM.parse(b64.dec(payloadEnc));
         return { id: id, payload: payload };
-        var e_2, _a;
     }
     function makeEvtMessage(ami, userevent) {
         var evtMessage = new ts_events_extended_1.SyncEvent();

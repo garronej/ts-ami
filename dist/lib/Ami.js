@@ -1,21 +1,27 @@
 "use strict";
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __assign = (this && this.__assign) || Object.assign || function(t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-        s = arguments[i];
-        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-            t[p] = s[p];
-    }
-    return t;
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -32,8 +38,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -205,8 +211,8 @@ var Ami = /** @class */ (function () {
     Ami.prototype.createApiClient = function (apiId) {
         return new amiApi.Client(this, apiId);
     };
-    Ami.prototype.startAgi = function (scripts, defaultScript) {
-        return agi.start(this, scripts, defaultScript);
+    Ami.prototype.startAgi = function (scripts, defaultScript, onError) {
+        return agi.start(this, scripts, defaultScript, onError);
     };
     Object.defineProperty(Ami.prototype, "ready", {
         get: function () {
@@ -229,8 +235,8 @@ var Ami = /** @class */ (function () {
     };
     Ami.prototype._postAction_ = function (action, headers, isRecursion) {
         return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
             var isTemporaryConnection, _a;
+            var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -393,7 +399,7 @@ var Ami = /** @class */ (function () {
     /** e.g call with ( "from-sip", "_[+0-9].", [ [ "NoOp", "FOO"], [ "Hangup" ] ] ) */
     Ami.prototype.dialplanAddSetOfExtensions = function (context, extension, instructionSet) {
         return __awaiter(this, void 0, void 0, function () {
-            var priority, instructionSet_1, instructionSet_1_1, instruction, application, applicationData, e_1_1, e_1, _a;
+            var e_1, _a, priority, instructionSet_1, instructionSet_1_1, instruction, application, applicationData, e_1_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0: return [4 /*yield*/, this.dialplanExtensionRemove(context, extension)];

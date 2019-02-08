@@ -7,4 +7,4 @@ export declare type Scripts = {
         [extensionPattern: string]: (channel: AGIChannel) => Promise<void>;
     };
 };
-export declare function start(ami: Ami, scripts: Scripts, defaultScript?: (channel: AGIChannel) => Promise<void>): Promise<void>;
+export declare function start(ami: Ami, scripts: Scripts, defaultScript?: (channel: AGIChannel) => Promise<void>, onError?: (severity: "ERROR" | "WARNING", message: string, error: Error) => void): Promise<void>;

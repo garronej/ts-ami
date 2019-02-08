@@ -1,6 +1,6 @@
 {
   "name": "ts-ami",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Asterisk AMI client for TypeScript, also implement async AGI",
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
@@ -23,12 +23,12 @@
     "asterisk-manager": "^0.1.16",
     "ini-extended": "garronej/ini-extended",
     "timer-extended": "github:garronej/timer-extended",
+    "transfer-tools": "garronej/transfer-tools",
     "ts-async-agi": "github:garronej/ts-async-agi",
-    "ts-events-extended": "garronej/ts-events-extended",
-    "transfer-tools": "garronej/transfer-tools"
+    "ts-events-extended": "garronej/ts-events-extended"
   },
   "devDependencies": {
     "@types/node": "^9.4.2",
-    "typescript": "2.7.1"
+    "typescript": "^3.3.3"
   }
 }

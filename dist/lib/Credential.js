@@ -25,6 +25,7 @@ var Credential;
     }
     Credential.match = match;
     function getFromConfigFile(asteriskConfigRoot, user) {
+        var e_1, _a;
         var filePath = path.join(asteriskConfigRoot, "manager.conf");
         if (!fs_1.existsSync(filePath))
             throw new Error("NO_FILE");
@@ -65,7 +66,6 @@ var Credential;
             finally { if (e_1) throw e_1.error; }
         }
         throw Error("NO_USER");
-        var e_1, _a;
     }
     Credential.getFromConfigFile = getFromConfigFile;
     function getListAuthority(strList) {
