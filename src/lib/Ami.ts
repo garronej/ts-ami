@@ -1,4 +1,4 @@
-import { SyncEvent, VoidSyncEvent } from "ts-events-extended";
+import { Evt, VoidEvt } from "ts-evt";
 import * as AstMan from "asterisk-manager";
 import * as c from "./Credential";
 import * as amiApi from "./amiApi";
@@ -69,18 +69,18 @@ export class Ami {
     public readonly astManForActions;
     public readonly astManForEvents;
 
-    public readonly evt = new SyncEvent<Ami.ManagerEvent>();
-    public readonly evtUserEvent = new SyncEvent<Ami.UserEvent>();
+    public readonly evt = new Evt<Ami.ManagerEvent>();
+    public readonly evtUserEvent = new Evt<Ami.UserEvent>();
 
     /** 
      * Posted when TCP connection with asterisk is lost.
      * Note that we will attempt to recover the connection
      * automatically.
      * */
-    public readonly evtTcpConnectionClosed = new VoidSyncEvent();
+    public readonly evtTcpConnectionClosed = new VoidEvt();
 
     private isReady = false;
-    private readonly evtFullyBooted = new VoidSyncEvent();
+    private readonly evtFullyBooted = new VoidEvt();
 
     public readonly credential: Ami.Credential;
 
@@ -167,7 +167,7 @@ export class Ami {
     }
 
     public lastActionId: string = "";
-    private actionPending: VoidSyncEvent | undefined = undefined;
+    private actionPending: VoidEvt | undefined = undefined;
 
     public async postAction(
         action: string,
@@ -210,7 +210,7 @@ export class Ami {
 
         }
 
-        this.actionPending = new VoidSyncEvent();
+        this.actionPending = new VoidEvt();
 
         if (!this.isReady) await this.ready;
 

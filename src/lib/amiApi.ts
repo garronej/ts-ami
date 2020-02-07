@@ -1,4 +1,4 @@
-import { SyncEvent } from "ts-events-extended";
+import { Evt } from "ts-evt";
 import { Ami } from "./Ami";
 import UserEvent = Ami.UserEvent;
 import { setTimer } from "timer-extended";
@@ -133,11 +133,11 @@ namespace Message {
     export function makeEvtMessage(
         ami: Ami,
         userevent: string
-    ): SyncEvent<Message> {
+    ): Evt<Message> {
 
-        let evtMessage = new SyncEvent<Message>();
+        let evtMessage = new Evt<Message>();
 
-        let evtUserEvent = new SyncEvent<UserEvent>();
+        let evtUserEvent = new Evt<UserEvent>();
         ami.evtUserEvent.attach(evtUserEvent);
 
         evtUserEvent.attach(
@@ -193,7 +193,7 @@ const eventUserevent = "API_EVENT_";
 
 export class Server {
 
-    public readonly evtRequest = new SyncEvent<{
+    public readonly evtRequest = new Evt<{
         method: string;
         params: any;
         resolve(returnValue: any): Promise<void>;
@@ -234,7 +234,7 @@ export class Server {
 
 export class Client {
 
-    public readonly evtEvent = new SyncEvent<{ name: string; event: any }>();
+    public readonly evtEvent = new Evt<{ name: string; event: any }>();
 
 
     constructor(

@@ -85,7 +85,7 @@ var __values = (this && this.__values) || function (o) {
     };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts_events_extended_1 = require("ts-events-extended");
+var ts_evt_1 = require("ts-evt");
 var AstMan = require("asterisk-manager");
 var c = require("./Credential");
 var amiApi = require("./amiApi");
@@ -102,21 +102,21 @@ var uniqNow = (function () {
 })();
 var Ami = /** @class */ (function () {
     function Ami() {
+        var _this = this;
         var inputs = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             inputs[_i] = arguments[_i];
         }
-        var _this = this;
-        this.evt = new ts_events_extended_1.SyncEvent();
-        this.evtUserEvent = new ts_events_extended_1.SyncEvent();
+        this.evt = new ts_evt_1.Evt();
+        this.evtUserEvent = new ts_evt_1.Evt();
         /**
          * Posted when TCP connection with asterisk is lost.
          * Note that we will attempt to recover the connection
          * automatically.
          * */
-        this.evtTcpConnectionClosed = new ts_events_extended_1.VoidSyncEvent();
+        this.evtTcpConnectionClosed = new ts_evt_1.VoidEvt();
         this.isReady = false;
-        this.evtFullyBooted = new ts_events_extended_1.VoidSyncEvent();
+        this.evtFullyBooted = new ts_evt_1.VoidEvt();
         this.lastActionId = "";
         this.actionPending = undefined;
         var credential;
@@ -269,7 +269,7 @@ var Ami = /** @class */ (function () {
                         return [2 /*return*/, this.postActionOnNewConnection(action, headers)];
                     case 7: return [3 /*break*/, 3];
                     case 8:
-                        this.actionPending = new ts_events_extended_1.VoidSyncEvent();
+                        this.actionPending = new ts_evt_1.VoidEvt();
                         if (!!this.isReady) return [3 /*break*/, 10];
                         return [4 /*yield*/, this.ready];
                     case 9:
@@ -399,7 +399,8 @@ var Ami = /** @class */ (function () {
     /** e.g call with ( "from-sip", "_[+0-9].", [ [ "NoOp", "FOO"], [ "Hangup" ] ] ) */
     Ami.prototype.dialplanAddSetOfExtensions = function (context, extension, instructionSet) {
         return __awaiter(this, void 0, void 0, function () {
-            var e_1, _a, priority, instructionSet_1, instructionSet_1_1, instruction, application, applicationData, e_1_1;
+            var priority, instructionSet_1, instructionSet_1_1, instruction, application, applicationData, e_1_1;
+            var e_1, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0: return [4 /*yield*/, this.dialplanExtensionRemove(context, extension)];

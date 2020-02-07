@@ -1,9 +1,9 @@
-import { SyncEvent } from "ts-events-extended";
+import { Evt } from "ts-evt";
 import { Ami } from "./Ami";
 export declare class Server {
     readonly ami: Ami;
     private readonly apiId;
-    readonly evtRequest: SyncEvent<{
+    readonly evtRequest: Evt<{
         method: string;
         params: any;
         resolve(returnValue: any): Promise<void>;
@@ -16,7 +16,7 @@ export declare class Server {
 export declare class Client {
     readonly ami: Ami;
     private readonly apiId;
-    readonly evtEvent: SyncEvent<{
+    readonly evtEvent: Evt<{
         name: string;
         event: any;
     }>;

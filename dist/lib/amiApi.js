@@ -58,7 +58,7 @@ var __values = (this && this.__values) || function (o) {
     };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts_events_extended_1 = require("ts-events-extended");
+var ts_evt_1 = require("ts-evt");
 var Ami_1 = require("./Ami");
 var timer_extended_1 = require("timer-extended");
 var tt = require("transfer-tools");
@@ -97,7 +97,8 @@ var Message;
     function makeSendMessage(ami, userevent) {
         var _this = this;
         return function (message) { return __awaiter(_this, void 0, void 0, function () {
-            var e_1, _a, tasks, _loop_1, _b, _c, userEvent;
+            var tasks, _loop_1, _a, _b, userEvent;
+            var e_1, _c;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
@@ -110,15 +111,15 @@ var Message;
                             }, function () { });
                         };
                         try {
-                            for (_b = __values(buildUserEvents(message, userevent)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                                userEvent = _c.value;
+                            for (_a = __values(buildUserEvents(message, userevent)), _b = _a.next(); !_b.done; _b = _a.next()) {
+                                userEvent = _b.value;
                                 _loop_1(userEvent);
                             }
                         }
                         catch (e_1_1) { e_1 = { error: e_1_1 }; }
                         finally {
                             try {
-                                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                                if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                             }
                             finally { if (e_1) throw e_1.error; }
                         }
@@ -156,8 +157,8 @@ var Message;
         return { id: id, payload: payload };
     }
     function makeEvtMessage(ami, userevent) {
-        var evtMessage = new ts_events_extended_1.SyncEvent();
-        var evtUserEvent = new ts_events_extended_1.SyncEvent();
+        var evtMessage = new ts_evt_1.Evt();
+        var evtUserEvent = new ts_evt_1.Evt();
         ami.evtUserEvent.attach(evtUserEvent);
         evtUserEvent.attach(function (userEvent) { return userEvent.userevent === userevent; }, function (userEvent) {
             var userEvents = [];
@@ -189,7 +190,7 @@ var Server = /** @class */ (function () {
         var _this = this;
         this.ami = ami;
         this.apiId = apiId;
-        this.evtRequest = new ts_events_extended_1.SyncEvent();
+        this.evtRequest = new ts_evt_1.Evt();
         this.sendEvent = Message.makeSendMessage(this.ami, "" + eventUserevent + this.apiId);
         var sendResponse = Message.makeSendMessage(ami, "" + responseUserevent + apiId);
         var resolveOrReject = function (id, payload) { return sendResponse({ id: id, payload: payload }); };
@@ -217,7 +218,7 @@ var Client = /** @class */ (function () {
         var _this = this;
         this.ami = ami;
         this.apiId = apiId;
-        this.evtEvent = new ts_events_extended_1.SyncEvent();
+        this.evtEvent = new ts_evt_1.Evt();
         this.sendRequest = Message.makeSendMessage(this.ami, "" + requestUserevent + this.apiId);
         this.evtResponse = Message.makeEvtMessage(this.ami, "" + responseUserevent + this.apiId);
         Message.makeEvtMessage(ami, "" + eventUserevent + this.apiId).attach(function (_a) {
