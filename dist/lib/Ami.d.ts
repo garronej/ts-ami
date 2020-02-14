@@ -4,7 +4,7 @@ import * as amiApi from "./amiApi";
 import * as agi from "./agi";
 export declare class Ami {
     private static instance;
-    static readonly hasInstance: boolean;
+    static get hasInstance(): boolean;
     static getInstance(asteriskManagerUser?: string, asteriskConfigRoot?: string): Ami;
     static getInstance(asteriskManagerCredential: c.Credential): Ami;
     static generateUniqueActionId(): string;
@@ -27,7 +27,7 @@ export declare class Ami {
     readonly credential: Ami.Credential;
     constructor(asteriskManagerUser?: string, asteriskConfigRoot?: string);
     constructor(asteriskManagerCredential: Ami.Credential);
-    readonly ready: Promise<void>;
+    get ready(): Promise<void>;
     lastActionId: string;
     private actionPending;
     postAction(action: string, headers: Ami.Headers): Promise<any>;

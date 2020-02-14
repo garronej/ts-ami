@@ -138,7 +138,7 @@ namespace Message {
         let evtMessage = new Evt<Message>();
 
         let evtUserEvent = new Evt<UserEvent>();
-        ami.evtUserEvent.attach(evtUserEvent);
+        ami.evtUserEvent.attach(userEvent=> evtUserEvent.post(userEvent));
 
         evtUserEvent.attach(
             userEvent => userEvent.userevent === userevent,

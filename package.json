@@ -25,7 +25,7 @@
     "timer-extended": "github:garronej/timer-extended",
     "transfer-tools": "garronej/transfer-tools",
     "ts-async-agi": "github:garronej/ts-async-agi",
-    "ts-evt": "^4.3.3"
+    "ts-evt": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "^9.4.2",

@@ -24,10 +24,11 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -74,15 +75,16 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
-var __values = (this && this.__values) || function (o) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
     if (m) return m.call(o);
-    return {
+    if (o && typeof o.length === "number") return {
         next: function () {
             if (o && i >= o.length) o = void 0;
             return { value: o && o[i++], done: !o };
         }
     };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var ts_evt_1 = require("ts-evt");
@@ -278,7 +280,7 @@ var Ami = /** @class */ (function () {
                     case 10: return [4 /*yield*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
                             var _this = this;
                             return __generator(this, function (_a) {
-                                return [2 /*return*/, this.astManForActions.action(__assign({}, headers, { action: action }), function (error, res) {
+                                return [2 /*return*/, this.astManForActions.action(__assign(__assign({}, headers), { action: action }), function (error, res) {
                                         _this.actionPending.post();
                                         _this.actionPending = undefined;
                                         if (error) {
@@ -348,7 +350,7 @@ var Ami = /** @class */ (function () {
                     case 0:
                         headers = { variable: variable, value: value };
                         if (channel)
-                            headers = __assign({}, headers, { channel: channel });
+                            headers = __assign(__assign({}, headers), { channel: channel });
                         return [4 /*yield*/, this.postAction("SetVar", headers)];
                     case 1:
                         _a.sent();
@@ -365,7 +367,7 @@ var Ami = /** @class */ (function () {
                     case 0:
                         headers = { variable: variable };
                         if (channel)
-                            headers = __assign({}, headers, { channel: channel });
+                            headers = __assign(__assign({}, headers), { channel: channel });
                         return [4 /*yield*/, this.postAction("GetVar", headers)];
                     case 1: return [2 /*return*/, (_a.sent()).value];
                 }
@@ -476,7 +478,7 @@ var Ami = /** @class */ (function () {
                     case 0:
                         headers = { context: context, extension: extension };
                         if (priority !== undefined)
-                            headers = __assign({}, headers, { "priority": "" + priority });
+                            headers = __assign(__assign({}, headers), { "priority": "" + priority });
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
