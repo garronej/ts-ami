@@ -1,4 +1,4 @@
-import { Evt } from "ts-evt";
+import { Evt } from "evt";
 import { Ami } from "./Ami";
 export declare class Server {
     readonly ami: Ami;

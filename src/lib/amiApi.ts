@@ -1,4 +1,4 @@
-import { Evt } from "ts-evt";
+import { Evt } from "evt";
 import { Ami } from "./Ami";
 import UserEvent = Ami.UserEvent;
 import { setTimer } from "timer-extended";
@@ -150,14 +150,14 @@ namespace Message {
 
                 let packetCount = parseInt(userEvent[packetCountKey]!);
 
-                let timer = setTimer(() => evtUserEvent.detach(userEvents), 3000);
+                let timer = setTimer(() => evtUserEvent.detach(Evt.getCtx(userEvents)), 3000);
 
                 evtUserEvent.attachExtract(
                     userEvent => (
                         userEvent[messageIdKey] === id &&
                         userEvent.userevent === userevent
                     ),
-                    userEvents,
+                    Evt.getCtx(userEvents),
                     userEvent => {
 
                         userEvents[userEvent[packetIndexKey]!] = userEvent;

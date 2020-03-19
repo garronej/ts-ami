@@ -1,4 +1,4 @@
-import { Evt, VoidEvt } from "ts-evt";
+import { Evt, VoidEvt } from "evt";
 import * as AstMan from "asterisk-manager";
 import * as c from "./Credential";
 import * as amiApi from "./amiApi";

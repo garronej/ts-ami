@@ -87,7 +87,7 @@ var __values = (this && this.__values) || function(o) {
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var ts_evt_1 = require("ts-evt");
+var evt_1 = require("evt");
 var AstMan = require("asterisk-manager");
 var c = require("./Credential");
 var amiApi = require("./amiApi");
@@ -109,16 +109,16 @@ var Ami = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             inputs[_i] = arguments[_i];
         }
-        this.evt = new ts_evt_1.Evt();
-        this.evtUserEvent = new ts_evt_1.Evt();
+        this.evt = new evt_1.Evt();
+        this.evtUserEvent = new evt_1.Evt();
         /**
          * Posted when TCP connection with asterisk is lost.
          * Note that we will attempt to recover the connection
          * automatically.
          * */
-        this.evtTcpConnectionClosed = new ts_evt_1.VoidEvt();
+        this.evtTcpConnectionClosed = new evt_1.VoidEvt();
         this.isReady = false;
-        this.evtFullyBooted = new ts_evt_1.VoidEvt();
+        this.evtFullyBooted = new evt_1.VoidEvt();
         this.lastActionId = "";
         this.actionPending = undefined;
         var credential;
@@ -271,7 +271,7 @@ var Ami = /** @class */ (function () {
                         return [2 /*return*/, this.postActionOnNewConnection(action, headers)];
                     case 7: return [3 /*break*/, 3];
                     case 8:
-                        this.actionPending = new ts_evt_1.VoidEvt();
+                        this.actionPending = new evt_1.VoidEvt();
                         if (!!this.isReady) return [3 /*break*/, 10];
                         return [4 /*yield*/, this.ready];
                     case 9:
