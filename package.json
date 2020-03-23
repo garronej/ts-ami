@@ -21,11 +21,11 @@
   "license": "MIT",
   "dependencies": {
     "asterisk-manager": "^0.1.16",
+    "evt": "^1.0.16",
     "ini-extended": "garronej/ini-extended",
     "timer-extended": "github:garronej/timer-extended",
     "transfer-tools": "garronej/transfer-tools",
-    "ts-async-agi": "github:garronej/ts-async-agi",
-    "evt": "~1.0.0"
+    "ts-async-agi": "github:garronej/ts-async-agi"
   },
   "devDependencies": {
     "@types/node": "^9.4.2",
