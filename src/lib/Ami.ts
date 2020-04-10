@@ -161,7 +161,7 @@ export class Ami {
         if (this.isReady) {
             return Promise.resolve();
         } else {
-            return this.evtFullyBooted.waitFor(()=>[undefined])
+            return this.evtFullyBooted.waitFor()
         }
 
     }

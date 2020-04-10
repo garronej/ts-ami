@@ -222,7 +222,7 @@ var Ami = /** @class */ (function () {
                 return Promise.resolve();
             }
             else {
-                return this.evtFullyBooted.waitFor(function () { return [undefined]; });
+                return this.evtFullyBooted.waitFor();
             }
         },
         enumerable: true,
