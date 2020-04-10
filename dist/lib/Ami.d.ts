@@ -1,4 +1,4 @@
-import { Evt, VoidEvt } from "evt";
+import { VoidEvt } from "evt";
 import * as c from "./Credential";
 import * as amiApi from "./amiApi";
 import * as agi from "./agi";
@@ -14,8 +14,8 @@ export declare class Ami {
     startAgi(scripts: agi.Scripts, defaultScript?: (channel: agi.AGIChannel) => Promise<void>, onError?: (severity: "ERROR" | "WARNING", message: string, error: Error) => void): Promise<void>;
     readonly astManForActions: any;
     readonly astManForEvents: any;
-    readonly evt: Evt<Ami.ManagerEvent>;
-    readonly evtUserEvent: Evt<Ami.UserEvent>;
+    readonly evt: import("evt/dist/lib/types").Evt<Ami.ManagerEvent>;
+    readonly evtUserEvent: import("evt/dist/lib/types").Evt<Ami.UserEvent>;
     /**
      * Posted when TCP connection with asterisk is lost.
      * Note that we will attempt to recover the connection

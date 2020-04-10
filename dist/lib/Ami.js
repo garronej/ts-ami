@@ -116,9 +116,9 @@ var Ami = /** @class */ (function () {
          * Note that we will attempt to recover the connection
          * automatically.
          * */
-        this.evtTcpConnectionClosed = new evt_1.VoidEvt();
+        this.evtTcpConnectionClosed = evt_1.Evt.create();
         this.isReady = false;
-        this.evtFullyBooted = new evt_1.VoidEvt();
+        this.evtFullyBooted = evt_1.Evt.create();
         this.lastActionId = "";
         this.actionPending = undefined;
         var credential;
@@ -222,7 +222,7 @@ var Ami = /** @class */ (function () {
                 return Promise.resolve();
             }
             else {
-                return this.evtFullyBooted.waitFor();
+                return this.evtFullyBooted.waitFor(function () { return [undefined]; });
             }
         },
         enumerable: true,
@@ -271,7 +271,7 @@ var Ami = /** @class */ (function () {
                         return [2 /*return*/, this.postActionOnNewConnection(action, headers)];
                     case 7: return [3 /*break*/, 3];
                     case 8:
-                        this.actionPending = new evt_1.VoidEvt();
+                        this.actionPending = evt_1.Evt.create();
                         if (!!this.isReady) return [3 /*break*/, 10];
                         return [4 /*yield*/, this.ready];
                     case 9:

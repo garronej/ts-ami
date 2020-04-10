@@ -77,10 +77,10 @@ export class Ami {
      * Note that we will attempt to recover the connection
      * automatically.
      * */
-    public readonly evtTcpConnectionClosed = new VoidEvt();
+    public readonly evtTcpConnectionClosed = Evt.create();
 
     private isReady = false;
-    private readonly evtFullyBooted = new VoidEvt();
+    private readonly evtFullyBooted = Evt.create();
 
     public readonly credential: Ami.Credential;
 
@@ -161,7 +161,7 @@ export class Ami {
         if (this.isReady) {
             return Promise.resolve();
         } else {
-            return this.evtFullyBooted.waitFor()
+            return this.evtFullyBooted.waitFor(()=>[undefined])
         }
 
     }
@@ -210,7 +210,7 @@ export class Ami {
 
         }
 
-        this.actionPending = new VoidEvt();
+        this.actionPending = Evt.create();
 
         if (!this.isReady) await this.ready;
 

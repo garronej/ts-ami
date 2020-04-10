@@ -1,9 +1,8 @@
-import { Evt } from "evt";
 import { Ami } from "./Ami";
 export declare class Server {
     readonly ami: Ami;
     private readonly apiId;
-    readonly evtRequest: Evt<{
+    readonly evtRequest: import("evt/dist/lib/types").Evt<{
         method: string;
         params: any;
         resolve(returnValue: any): Promise<void>;
@@ -16,7 +15,7 @@ export declare class Server {
 export declare class Client {
     readonly ami: Ami;
     private readonly apiId;
-    readonly evtEvent: Evt<{
+    readonly evtEvent: import("evt/dist/lib/types").Evt<{
         name: string;
         event: any;
     }>;
