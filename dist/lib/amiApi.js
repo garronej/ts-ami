@@ -60,6 +60,7 @@ var __values = (this && this.__values) || function(o) {
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.RemoteError = exports.TimeoutError = exports.Client = exports.Server = void 0;
 var evt_1 = require("evt");
 var Ami_1 = require("./Ami");
 var timer_extended_1 = require("timer-extended");

@@ -47,6 +47,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.start = void 0;
 var ts_async_agi_1 = require("ts-async-agi");
 /*
 let outboundHandlers: {
